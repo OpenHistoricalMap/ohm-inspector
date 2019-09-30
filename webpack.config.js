@@ -26,7 +26,7 @@ module.exports = {
         publicPath: "/api/",
         // allow the export (which itself is a namespace object) into the global namespace
         libraryTarget: 'var',
-        library: 'CNRA'
+        library: 'openhistoricalmap'
     },
 
     module: {
