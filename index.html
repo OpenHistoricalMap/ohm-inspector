@@ -33,7 +33,9 @@
             // if we are given a type and ID, load it
             // if not, then we won't even be seeing this sidebar and we have nothing to do
             if (OSMTYPE && OSMID) {
-                inspector = new openhistoricalmap.OpenHistoricaMapInspector();
+                inspector = new openhistoricalmap.OpenHistoricaMapInspector({
+                    debug: true,
+                });
                 inspector.selectFeature(OSMTYPE, OSMID);
             }
             else {
