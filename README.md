@@ -1,2 +1,9 @@
-# ohm-sidebar
-client-side app to render media-rich sidebar, later to be integrated into Rails app.
+# ohm-inspector
+
+An enhancement to the OpenHistoricalMap Inspector in the left sidebar.
+
+Github: https://github.com/OpenHistoricalMap/ohm-inspector/
+
+Demo and API Docs: https://openhistoricalmap.github.io/ohm-inspector/
+
+For development notes see *DEVELOPMENT.md*
