@@ -6,6 +6,7 @@ export class OpenHistoricaMapInspector {
             apiVersion: "0.6",
             classicDivQuerySelector: '#sidebar_content div.browse-section',     // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
             featureTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
+            featureFooter: '#sidebar_content div.secondary-actions',            // querySelector path to the secondary actions footer with the Download XML and View History
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -19,6 +20,7 @@ export class OpenHistoricaMapInspector {
         // we won't actually have anything to show until selectFeature() is called
         this.oldpanel = document.querySelector(this.options.classicDivQuerySelector);
         this.titlebar = document.querySelector(this.options.featureTitleBar);
+        this.footer = document.querySelector(this.options.featureFooter);
 
         this.mypanel = document.createElement('DIV');
         this.mypanel.classList.add('openhistoricalmap-inspector-panel');
@@ -29,32 +31,34 @@ export class OpenHistoricaMapInspector {
     }
 
     selectFeature(type, id) {
-        // construct API URL e.g.   https://openhistoricalmap.org/api/0.6/way/198180481
+        // construct API URL e.g. https://openhistoricalmap.org/api/0.6/way/198180481
         const url = `${this.options.apiBaseUrl}/${this.options.apiVersion}/${type}/${id}`;
         if (this.options.debug) console.debug(`OpenHistoricaMapInspector selectFeature(${type}, ${id}) => ${url}`);
 
         const success = (xmldoc) => {
             this.renderFeatureDetails(type, id, xmldoc);
-//GDA onFeatureLoaded
+            this.options.onFeatureLoaded.call(this, type, id, xmldoc);
         };
         const notfound = () => {
             this.renderNotFound(type, id);
-//GDA onFeatureFail
+            this.options.onFeatureFail.call(this, type, id);
         };
         const failure = () => {
             this.renderNetworkError();
-//GDA onFeatureFail
+            this.options.onFeatureFail.call(this, type, id);
         };
         this.fetchXmlData(url, success, notfound, failure);
     }
 
     renderNetworkError () {
         this.titlebar.innerHTML = 'Error';
+        this.footer.innerHTML = '';
         this.mypanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
         this.titlebar.innerHTML = 'Not Found';
+        this.footer.innerHTML = '';
         this.mypanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
     }
 
@@ -76,6 +80,7 @@ export class OpenHistoricaMapInspector {
     renderFeatureDetails(type, id, xmldoc) {
 //GDA
 console.debug([ type, id, xmldoc ]);
+console.debug([ this.footer, this.titlebar, this.mypanel ]);
     }
 
     showClassicPanel () {

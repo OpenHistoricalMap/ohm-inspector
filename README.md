@@ -33,7 +33,9 @@ inspector.selectFeature('way', 123456);
 
 `apiVersion` -- The API version to use when querying the OpenStreetMap/OpenHistoricalMap Overpass API. This should be set to *0.6* and not changed.
 
-`onFeatureLoaded(feature)` -- An optional callback function to handle a feature loaded by `selectFeature()`, beyond the panel's own behavior of showing the feature. Within the function, `this` refers to the OpenHistoricaMapInspector control.
+`onFeatureLoaded(type, id, featurexml)` -- An optional callback function to handle a feature loaded by `selectFeature()`, beyond the panel's own behavior of showing the feature. Within the function, `this` refers to the OpenHistoricaMapInspector control. Params passed in will be the OSM feature type selected, the OSM feature ID selected, and the resulting XML DOM object https://www.w3schools.com/xml/xml_parser.asp.
+
+`onFeatureFail(type, id)` -- An optional callback function to handle an error condition when trying to fetch data via `selectFeature()`. This includes server errors, network errors, and the feature not being found. Within the function, `this` refers to the OpenHistoricaMapInspector control. Params passed in will be the OSM feature type and feature ID selected.
 
 
 ### Methods
