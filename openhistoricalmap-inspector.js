@@ -4,9 +4,9 @@ export class OpenHistoricaMapInspector {
         this.options = Object.assign({
             apiBaseUrl: "https://openhistoricalmap.org/api/",                   // the API URL and version to use
             apiVersion: "0.6",
-            classicDivQuerySelector: '#sidebar_content div.browse-section',     // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
+            classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
+            classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
             featureTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
-            featureFooter: '#sidebar_content div.secondary-actions',            // querySelector path to the secondary actions footer with the Download XML and View History
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -18,16 +18,47 @@ export class OpenHistoricaMapInspector {
 
         // step 3: create our own DIV in the sidebar, then hide the classic panel
         // we won't actually have anything to show until selectFeature() is called
-        this.oldpanel = document.querySelector(this.options.classicDivQuerySelector);
+        this.oldpanel = document.querySelector(this.options.classicDivSelector);
+        this.oldfooter = document.querySelector(this.options.classicFooterSelector);
         this.titlebar = document.querySelector(this.options.featureTitleBar);
-        this.footer = document.querySelector(this.options.featureFooter);
 
-        this.mypanel = document.createElement('DIV');
-        this.mypanel.classList.add('openhistoricalmap-inspector-panel');
-
-        this.oldpanel.parentNode.insertBefore(this.mypanel, this.oldpanel);
-
+        this.initTitlebar();
+        this.initFooter();
+        this.initPanel();
         this.hideClassicPanel();
+    }
+
+    initPanel () {
+        this.mainpanel = document.createElement('DIV');
+        this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
+
+        this.oldpanel.parentNode.insertBefore(this.mainpanel, this.oldpanel.nextSibling);
+    }
+
+    initTitlebar () {
+        this.titlebar.innerHTML = '';
+    }
+
+    initFooter () {
+        this.footer = document.createElement('DIV');
+        this.footer.classList.add('openhistoricalmap-inspector-footer');
+        this.oldpanel.parentNode.insertBefore(this.footer, this.oldfooter.nextSibling);
+
+        this.footer.innerHTML = `
+            <a href="javascript:void(0);" data-link="openhistoricalmap-inspector-classicview">Switch to Classic Inspector</a>
+            <br/>
+            <a href="javascript:void(0);" data-link="openhistoricalmap-inspector-newinspector">Switch to OHM Inspector</a>
+            <br/>
+        `;
+        this.footer_classicviewbutton = this.footer.querySelector('a[data-link="openhistoricalmap-inspector-classicview"]');
+        this.footer_inspectorviewbutton = this.footer.querySelector('a[data-link="openhistoricalmap-inspector-newinspector"]');
+
+        this.footer_classicviewbutton.addEventListener('click', () => {
+            this.showClassicPanel();
+        });
+        this.footer_inspectorviewbutton.addEventListener('click', () => {
+            this.hideClassicPanel();
+        });
     }
 
     selectFeature(type, id) {
@@ -52,14 +83,14 @@ export class OpenHistoricaMapInspector {
 
     renderNetworkError () {
         this.titlebar.innerHTML = 'Error';
-        this.footer.innerHTML = '';
-        this.mypanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
+        this.footer.style.display = 'none';
+        this.mainpanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
         this.titlebar.innerHTML = 'Not Found';
-        this.footer.innerHTML = '';
-        this.mypanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
+        this.footer.style.display = 'none';
+        this.mainpanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
     }
 
     fetchXmlData (url, success, notfound, failure) {
@@ -78,22 +109,63 @@ export class OpenHistoricaMapInspector {
     }
 
     renderFeatureDetails(type, id, xmldoc) {
-//GDA
-console.debug([ type, id, xmldoc ]);
-console.debug([ this.footer, this.titlebar, this.mypanel ]);
+        // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.footer, this.titlebar, this.mainpanel ]);
+
+        // titlebar: use the name tag and the <whatever>'s id attribute
+        const name = this.getTagValue(xmldoc, 'name');
+        this.titlebar.textContent = `${name} (${type} ${id})`;
+
+        // main body: first, any image:X tags forming a slideshow
+        //GDA
+        const images = [];
+        for (var imagei=0; imagei<=99; imagei++) {
+            const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
+            if (!imageurl) break;
+            images.push(imageurl);
+        }
+console.log(images);
+
+        // main body: then, a few hand-curated fields forming a table
+        //GDA
+        const startdate = this.getTagValue(xmldoc, 'start_date');
+        const enddate = this.getTagValue(xmldoc, 'end_date');
+        const wikipedialink = this.getTagValue(xmldoc, 'wikipedia');
+        const followedby = this.getTagValue(xmldoc, 'followed_by');
+console.log([ startdate, enddate, wikipedialink, followedby ]);
+
+        // main body: finally, some links to the raw XML etc.
+        //GDA
+    }
+
+    getTagValue (xmldoc, tagname) {
+        const tags = xmldoc.getElementsByTagName('tag');
+        for (var i = 0; i < tags.length; i++) {
+            const keyword = tags[i].getAttribute('k');
+            const value = tags[i].getAttribute('v');
+            if (keyword == tagname) return value;
+        }
+        return undefined;
     }
 
     showClassicPanel () {
-        // the pre-existinginspector output is in document.querySelector(classicDivQuerySelector)
+        // the pre-existinginspector output is in document.querySelector(classicDivSelector)
         // goal here is to hide our own DIV and show that one
         this.oldpanel.style.display = 'block';
-        this.mypanel.style.display = 'none';
+        this.oldfooter.style.display = 'block';
+        this.mainpanel.style.display = 'none';
+
+        this.footer_classicviewbutton.style.display = 'none';
+        this.footer_inspectorviewbutton.style.display = 'inline';
     }
 
     hideClassicPanel () {
-        // the pre-existinginspector output is in document.querySelector(classicDivQuerySelector)
+        // the pre-existinginspector output is in document.querySelector(classicDivSelector)
         // goal here is to hide that DIV and show our own
         this.oldpanel.style.display = 'none';
-        this.mypanel.style.display = 'block';
+        this.oldfooter.style.display = 'none';
+        this.mainpanel.style.display = 'block';
+
+        this.footer_classicviewbutton.style.display = 'inline';
+        this.footer_inspectorviewbutton.style.display = 'none';
     }
 }
