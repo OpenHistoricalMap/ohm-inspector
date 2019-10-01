@@ -5,8 +5,9 @@ export class OpenHistoricaMapInspector {
             apiBaseUrl: "https://openhistoricalmap.org/api/",                   // the API URL and version to use
             apiVersion: "0.6",
             classicDivQuerySelector: '#sidebar_content div.browse-section',     // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
-            featureTitleBar: '#sidebar_content > h2',                               // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
+            featureTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
+            onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
         }, options);
         if (this.options.debug) console.debug([ 'OpenHistoricaMapInspector loaded options', this.options ]);
@@ -32,30 +33,44 @@ export class OpenHistoricaMapInspector {
         const url = `${this.options.apiBaseUrl}/${this.options.apiVersion}/${type}/${id}`;
         if (this.options.debug) console.debug(`OpenHistoricaMapInspector selectFeature(${type}, ${id}) => ${url}`);
 
-       const request = new XMLHttpRequest();
+        const success = (xmldoc) => {
+            this.renderFeatureDetails(type, id, xmldoc);
+//GDA onFeatureLoaded
+        };
+        const notfound = () => {
+            this.renderNotFound(type, id);
+//GDA onFeatureFail
+        };
+        const failure = () => {
+            this.renderNetworkError();
+//GDA onFeatureFail
+        };
+        this.fetchXmlData(url, success, notfound, failure);
+    }
+
+    renderNetworkError () {
+        this.titlebar.innerHTML = 'Error';
+        this.mypanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
+    }
+
+    renderNotFound (type, id) {
+        this.titlebar.innerHTML = 'Not Found';
+        this.mypanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
+    }
+
+    fetchXmlData (url, success, notfound, failure) {
+        const request = new XMLHttpRequest();
         request.open('GET', url);
         request.onload = () => {
-            // clear existing content
-            this.mypanel.innerHTML = "";
-
-            // handle Not Found
-            if (request.status == 404) {
-                this.titlebar.innerHTML = 'Not Found';
-                this.mypanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
-                return;
-            }
+            if (request.status == 404) return notfound();  // 404 Not Found is not an error; it is a valid response from the server
 
             const xmldoc = new DOMParser().parseFromString(request.response, "text/xml");
-            this.renderFeatureDetails(type, id, xmldoc);
+            success(xmldoc);
         };
-        request.onerror = function () {
-            alert('Unable to contact the OHM server at this time. Please try again later.');
+        request.onerror = () => {  // does not cover 404s, but 500s and network errors
+            failure();
         };
         request.send();
-
-        //GDA
-        // don't forget to call onFeatureLoaded() so the caller can also get a copy of the parsed feature and maybe do something about it
-        // note that the API output only includes propertes and not geometry info, so "simple" stuff like centering on the feature aren't readily feasible
     }
 
     renderFeatureDetails(type, id, xmldoc) {
