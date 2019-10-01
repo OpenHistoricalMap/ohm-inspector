@@ -13,6 +13,8 @@ Running `npm run build` will compile the browser-ready versions **api/api.js** a
 
 For development, `npm start` is recommended. This will run a HTTP server which watches for changes and reloads the page as you modify the code. *Note that this is not a replacement for `npm run build` for deployment.*
 
+The command `npm run deploy` will do a `npm run build` followed by a  git add, commit, and push. This single command will effectively deploy the current state of the code to Github pages.
+
 
 ### Deployment, Docs, and Demos
 
