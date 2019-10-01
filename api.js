@@ -12,8 +12,5 @@ require('./openhistoricalmap-inspector.scss');
 require('./index.html');
 
 // the API code itself
-import { OpenHistoricaMapInspector } from './openhistoricalmap-inspector';
-
-module.exports = {
-    OpenHistoricaMapInspector,
-};
+var OpenHistoricaMapInspector = require('./openhistoricalmap-inspector');
+export default OpenHistoricaMapInspector;

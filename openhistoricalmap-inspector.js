@@ -1,5 +1,3 @@
-require('./etc/glyphicons/css/glyphicons.css');
-
 export class OpenHistoricaMapInspector {
     constructor (options) {
         // step 1: load default options, merging their passed-in without these defaults
@@ -62,6 +60,7 @@ export class OpenHistoricaMapInspector {
 
     renderFeatureDetails(type, id, xmldoc) {
 //GDA
+console.debug([ type, id, xmldoc ]);
     }
 
     showClassicPanel () {
