@@ -118,12 +118,12 @@ export class OpenHistoricaMapInspector {
         // main body: first, any image:X tags forming a slideshow
         //GDA
         const images = [];
-        for (var imagei=0; imagei<=99; imagei++) {
+        for (var imagei=1; imagei<=99; imagei++) {
             const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
             if (!imageurl) break;
             images.push(imageurl);
         }
-console.log(images);
+        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) images:` , images]);
 
         // main body: then, a few hand-curated fields forming a table
         //GDA
@@ -131,10 +131,110 @@ console.log(images);
         const enddate = this.getTagValue(xmldoc, 'end_date');
         const wikipedialink = this.getTagValue(xmldoc, 'wikipedia');
         const followedby = this.getTagValue(xmldoc, 'followed_by');
-console.log([ startdate, enddate, wikipedialink, followedby ]);
+        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
 
-        // main body: finally, some links to the raw XML etc.
-        //GDA
+        // mostly a repeated pattern: a DIV containing a strong for the field name and a span for the text value
+
+        if (startdate && startdate != '-1000000-01-01') {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+            const b = document.createElement('STRONG');
+            b.textContent = 'Start Date: ';
+            htmldiv.appendChild(b);
+
+            const t = document.createElement('SPAN');
+            t.textContent = startdate;
+            htmldiv.appendChild(t);
+
+            this.mainpanel.appendChild(htmldiv);
+        }
+        if (enddate && enddate != '1000000-01-01') {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+            const b = document.createElement('STRONG');
+            b.textContent = 'End Date: ';
+            htmldiv.appendChild(b);
+
+            const t = document.createElement('SPAN');
+            t.textContent = startdate;
+            htmldiv.appendChild(t);
+
+            this.mainpanel.appendChild(htmldiv);
+        }
+        if (wikipedialink) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+            const b = document.createElement('STRONG');
+            b.textContent = 'Wikipedia: ';
+            htmldiv.appendChild(b);
+
+            // content may be a URL and thus a simple hyperlink
+            // or it may be xx:Something for us to construct a "wikipedia protocol" link
+            // or we give up and try and run it as a seach on Wikipedia
+            const t = document.createElement('A');
+            t.textContent = '(link)';
+            t.target = '_blank';
+            t.rel = 'nofollow';
+            
+            if (wikipedialink.match(/^http/i)) {  // plain ol' URL
+                t.href = wikipedialink;
+            }
+            else if (wikipedialink.match(/^[a-z][a-z]:/)) {  // xx:Page_Url for a "Wikipedia protocol" link to a given language's Wikipedia
+                const lang = wikipedialink.substr(0, 2);
+                const uri = wikipedialink.substr(3);
+                t.href = `https://${lang}.wikipedia.org/wiki/${uri}`;
+            }
+            else {  //  guess just try it as a Wikipedia search
+                t.href = `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(wikipedialink)}`;
+            }
+            htmldiv.appendChild(t);
+
+            this.mainpanel.appendChild(htmldiv);
+        }
+        if (followedby) {
+            const source = this.getTagValue(xmldoc, 'followed_by:source');
+
+            if (source && source.match(/^http/i)) {  // if source is a link, then this whole source readout is a hyperlink to that source
+                const htmldiv = document.createElement('DIV');
+                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+                const b = document.createElement('STRONG');
+                b.textContent = 'Followed By: ';
+                htmldiv.appendChild(b);
+
+                const a = document.createElement('A');
+                a.href = source;
+                a.target = '_blank';
+                a.rel = 'nofollow';
+                a.textContent = followedby;
+                htmldiv.appendChild(a);
+
+                this.mainpanel.appendChild(htmldiv);
+            }
+            else {  // not a single-term hyperlink, so show the followed-by text and the source text
+                const htmldiv = document.createElement('DIV');
+                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+                const b = document.createElement('STRONG');
+                b.textContent = 'Followed By: ';
+                htmldiv.appendChild(b);
+
+                const t = document.createElement('SPAN');
+                t.textContent = followedby;
+                htmldiv.appendChild(t);
+
+                this.mainpanel.appendChild(htmldiv);
+
+                if (source) {
+                    const s = document.createElement('SPAN');
+                    s.textContent = `. Source: ${source}`;
+                    htmldiv.appendChild(s);
+                }
+            }
+        }
     }
 
     getTagValue (xmldoc, tagname) {
