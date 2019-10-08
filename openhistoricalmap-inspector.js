@@ -27,6 +27,7 @@ export class OpenHistoricaMapInspector {
         this.initTitlebar();
         this.initFooter();
         this.initPanel();
+        this.initSlideshowModal();
         this.hideClassicPanel();
     }
 
@@ -61,6 +62,31 @@ export class OpenHistoricaMapInspector {
         this.footer_inspectorviewbutton.addEventListener('click', () => {
             this.hideClassicPanel();
         });
+    }
+
+    initSlideshowModal () {
+        this.slideshowmodal = document.createElement('DIV');
+        this.slideshowmodal.classList.add('openhistoricalmap-inspector-slideshowmodal');
+
+        this.slideshowmodal.innerHTML = `
+            <div class="openhistoricalmap-inspector-slideshowmodal-content">
+                <img class="openhistoricalmap-inspector-slideshowmodal-image" src="#" />
+                <div class="openhistoricalmap-inspector-slideshowmodal-closebutton">&times;</div>
+                <div class="openhistoricalmap-inspector-slideshowmodal-caption"></div>
+                <div class="openhistoricalmap-inspector-slideshowmodal-credits"></div>
+            </div>
+        `;
+
+        this.slideshowmodal_image = this.slideshowmodal.querySelector('img');
+        this.slideshowmodal_captionbox = this.slideshowmodal.querySelector('.openhistoricalmap-inspector-slideshowmodal-caption');
+        this.slideshowmodal_creditsbox = this.slideshowmodal.querySelector('.openhistoricalmap-inspector-slideshowmodal-credits');
+
+        this.slideshowmodal_closebutton = this.slideshowmodal.querySelector('div.openhistoricalmap-inspector-slideshowmodal-closebutton');
+        this.slideshowmodal_closebutton.addEventListener('click', () => {
+            this.slideshowmodal.classList.remove('openhistoricalmap-inspector-slideshowmodal-open');
+        });
+
+        document.body.appendChild(this.slideshowmodal);
     }
 
     selectFeature(type, id) {
@@ -110,7 +136,7 @@ export class OpenHistoricaMapInspector {
         request.send();
     }
 
-    renderFeatureDetails(type, id, xmldoc) {
+    renderFeatureDetails (type, id, xmldoc) {
         // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.footer, this.titlebar, this.mainpanel ]);
 
         // titlebar: use the name tag and the <whatever>'s id attribute
@@ -121,8 +147,8 @@ export class OpenHistoricaMapInspector {
         const slideshowimages = [];
         for (var imagei=1; imagei<=99; imagei++) {
             const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
-            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || `GDA Caption for photo ${imagei}`;
-            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || `GDA Credits for photo ${imagei}`;
+            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || '';
+            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || '';
 
             if (!imageurl) break;
 
@@ -142,9 +168,10 @@ export class OpenHistoricaMapInspector {
                 <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-prev" href="javascript:void(0);"><img src="${this.options.slideshowPrevIcon}" /></a>
                 <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-next" href="javascript:void(0);"><img src="${this.options.slideshowNextIcon}" /></a>
             `;
-            slideshowimages.forEach((imageinfo) => {
+            slideshowimages.forEach((imageinfo, imagei) => {
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
+                slide.setAttribute('data-slide-number', imagei);
                 slide.innerHTML = `<img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" />`;
 
                 if (imageinfo.captiontext) {
@@ -161,6 +188,10 @@ export class OpenHistoricaMapInspector {
                 }
 
                 htmldiv.appendChild(slide);
+
+                slide.querySelector('img').addEventListener('click', () => {
+                    this.showSlideshowLightbox(slide);
+                });
             });
 
             const slideshow_slides = htmldiv.querySelectorAll('.openhistoricalmap-inspector-panel-slideshow div.openhistoricalmap-inspector-panel-slideshow-slide');
@@ -341,5 +372,18 @@ export class OpenHistoricaMapInspector {
 
         this.footer_classicviewbutton.style.display = 'inline';
         this.footer_inspectorviewbutton.style.display = 'none';
+    }
+
+    showSlideshowLightbox (slide) {
+        const imgsrc = slide.querySelector('img').src;
+        const captiontext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-caption').textContent;
+        const attribtext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-credits').textContent;
+console.debug([ captiontext, this.slideshowmodal_captionbox ]);
+
+        this.slideshowmodal_image.src = imgsrc;
+        this.slideshowmodal_captionbox.textContent = captiontext;
+        this.slideshowmodal_creditsbox.textContent = attribtext;
+
+        this.slideshowmodal.classList.add('openhistoricalmap-inspector-slideshowmodal-open');
     }
 }

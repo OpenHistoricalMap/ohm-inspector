@@ -62,6 +62,8 @@ div.openhistoricalmap-inspector-panel {
                 width: 300px;
                 height: 300px;
                 object-fit: cover;
+
+                cursor: pointer;
             }
 
             span.openhistoricalmap-inspector-panel-slideshow-caption {
@@ -84,4 +86,69 @@ div.openhistoricalmap-inspector-panel {
 
 div.openhistoricalmap-inspector-footer {
     margin-top: 1em;
+}
+
+div.openhistoricalmap-inspector-slideshowmodal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #CCCCCC;
+
+    display: none;
+    &.openhistoricalmap-inspector-slideshowmodal-open {
+        display: block;
+    }
+
+    .openhistoricalmap-inspector-slideshowmodal-content {
+        padding: 10px;
+        background-color: white;
+
+        max-width: 96%;
+        max-height: 96%;
+        overflow: hidden;
+
+        position: absolute;
+        left: 50%;
+        top: 5%;
+        transform: translate(-50%);
+    }
+
+    .openhistoricalmap-inspector-slideshowmodal-closebutton {
+        cursor: pointer;
+
+        font-size: 30px;
+        font-weight: bold;
+
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 26px;
+
+        background-color: white;
+        border-radius: 50%;
+    }
+
+    img.openhistoricalmap-inspector-slideshowmodal-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    div.openhistoricalmap-inspector-slideshowmodal-caption {
+        text-align: center;
+
+        font-size: 80%;
+    }
+
+    div.openhistoricalmap-inspector-slideshowmodal-credits {
+        text-align: center;
+
+        font-size: 80%;
+        font-style: italic;
+    }
 }
