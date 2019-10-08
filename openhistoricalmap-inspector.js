@@ -7,6 +7,8 @@ export class OpenHistoricaMapInspector {
             classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
             classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
             featureTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
+            slideshowPrevIcon: './etc/Octicons-chevron-left.svg',                     // IMG SRC to the image slideshow buttons
+            slideshowNextIcon: './etc/Octicons-chevron-right.svg',                    // IMG SRC to the image slideshow buttons
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -116,24 +118,96 @@ export class OpenHistoricaMapInspector {
         this.titlebar.textContent = `${name} (${type} ${id})`;
 
         // main body: first, any image:X tags forming a slideshow
-        //GDA
-        const images = [];
+        const slideshowimages = [];
         for (var imagei=1; imagei<=99; imagei++) {
             const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
+            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || `GDA Caption for photo ${imagei}`;
+            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || `GDA Credits for photo ${imagei}`;
+
             if (!imageurl) break;
-            images.push(imageurl);
+
+            slideshowimages.push({
+                imageurl,
+                captiontext,
+                attribtext,
+            });
         }
-        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) images:` , images]);
+        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) images:` , slideshowimages]);
+
+        if (slideshowimages.length) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-slideshow');
+
+            htmldiv.innerHTML = `
+                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-prev" href="javascript:void(0);"><img src="${this.options.slideshowPrevIcon}" /></a>
+                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-next" href="javascript:void(0);"><img src="${this.options.slideshowNextIcon}" /></a>
+            `;
+            slideshowimages.forEach((imageinfo) => {
+                const slide = document.createElement('DIV');
+                slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
+                slide.innerHTML = `<img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" />`;
+
+                if (imageinfo.captiontext) {
+                    const textbox = document.createElement('SPAN');
+                    textbox.classList.add('openhistoricalmap-inspector-panel-slideshow-caption');
+                    textbox.textContent = imageinfo.captiontext;
+                    slide.appendChild(textbox);
+                }
+                if (imageinfo.attribtext) {
+                    const textbox = document.createElement('SPAN');
+                    textbox.classList.add('openhistoricalmap-inspector-panel-slideshow-credits');
+                    textbox.textContent = imageinfo.attribtext;
+                    slide.appendChild(textbox);
+                }
+
+                htmldiv.appendChild(slide);
+            });
+
+            const slideshow_slides = htmldiv.querySelectorAll('.openhistoricalmap-inspector-panel-slideshow div.openhistoricalmap-inspector-panel-slideshow-slide');
+
+            const selectSlide = (picki) => {
+                slideshow_slides.forEach(($img, i) => {
+                    if (i == picki) {
+                        $img.classList.add('openhistoricalmap-inspector-panel-slideshow-selected');
+                    }
+                    else {
+                        $img.classList.remove('openhistoricalmap-inspector-panel-slideshow-selected');
+                    }
+
+                    selectedslide = picki;
+                });
+
+                if (picki == 0) slideshow_prevbutton.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');
+                else slideshow_prevbutton.classList.remove('openhistoricalmap-inspector-panel-slideshow-hidden');
+
+                if (picki + 1 >= slideshow_slides.length) slideshow_nextbutton.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');
+                else slideshow_nextbutton.classList.remove('openhistoricalmap-inspector-panel-slideshow-hidden');
+            };
+
+            const slideshow_prevbutton = htmldiv.querySelector('.openhistoricalmap-inspector-panel-slideshow .openhistoricalmap-inspector-panel-slideshow-prev');
+            const slideshow_nextbutton = htmldiv.querySelector('.openhistoricalmap-inspector-panel-slideshow .openhistoricalmap-inspector-panel-slideshow-next');
+            slideshow_prevbutton.addEventListener('click', () => {
+                selectSlide(selectedslide - 1);
+            });
+            slideshow_nextbutton.addEventListener('click', () => {
+                selectSlide(selectedslide + 1);
+            });
+
+            // select the first image
+            let selectedslide = 0;
+            selectSlide(selectedslide);
+
+            this.mainpanel.appendChild(htmldiv);
+        }
 
         // main body: then, a few hand-curated fields forming a table
-        //GDA
+        // mostly a repeated pattern: a DIV containing a strong for the field name and a span for the text value
+        // but a few wrinkles such as resolving URL-shaped data (and a few not-so-URL-shaped) into hyperlinks
         const startdate = this.getTagValue(xmldoc, 'start_date');
         const enddate = this.getTagValue(xmldoc, 'end_date');
         const wikipedialink = this.getTagValue(xmldoc, 'wikipedia');
         const followedby = this.getTagValue(xmldoc, 'followed_by');
         if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
-
-        // mostly a repeated pattern: a DIV containing a strong for the field name and a span for the text value
 
         if (startdate && startdate != '-1000000-01-01') {
             const htmldiv = document.createElement('DIV');
