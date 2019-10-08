@@ -147,8 +147,8 @@ export class OpenHistoricaMapInspector {
         const slideshowimages = [];
         for (var imagei=1; imagei<=99; imagei++) {
             const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
-            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || '';
-            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || '';
+            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || ' ';
+            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || ' ';
 
             if (!imageurl) break;
 
