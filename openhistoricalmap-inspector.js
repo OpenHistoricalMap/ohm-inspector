@@ -276,26 +276,25 @@ export class OpenHistoricaMapInspector {
             b.textContent = 'Wikipedia: ';
             htmldiv.appendChild(b);
 
-            // content may be a URL and thus a simple hyperlink
-            // or it may be xx:Something for us to construct a "wikipedia protocol" link
-            // or we give up and try and run it as a seach on Wikipedia
-            const t = document.createElement('A');
-            t.textContent = '(link)';
-            t.target = '_blank';
-            t.rel = 'nofollow';
-            
-            if (wikipedialink.match(/^http/i)) {  // plain ol' URL
-                t.href = wikipedialink;
-            }
-            else if (wikipedialink.match(/^[a-z][a-z]:/)) {  // xx:Page_Url for a "Wikipedia protocol" link to a given language's Wikipedia
-                const lang = wikipedialink.substr(0, 2);
-                const uri = wikipedialink.substr(3);
-                t.href = `https://${lang}.wikipedia.org/wiki/${uri}`;
-            }
-            else {  //  guess just try it as a Wikipedia search
-                t.href = `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(wikipedialink)}`;
-            }
-            htmldiv.appendChild(t);
+            // pay attention, this gets weird: we need to use XHR to pull an excerpt from Wikipedia, which we will place into this line item
+            // but of course we don't want to "lose our place" by waiting a second or three to resume writing out these line items...
+            // place the line item now, with a target SPAN for the excerpt once we have it, and continue with the hyperlink and on to the next line item
+            const wtext = document.createElement('SPAN');
+            htmldiv.appendChild(wtext);
+            this.getWikipediaExcerpt(wikipedialink, (excerpt) => {
+                wtext.textContent = excerpt;
+            });
+
+            htmldiv.appendChild(document.createTextNode( '\u00A0'));  // space
+
+            // the hyperlink provided may be a URL and thus a simple hyperlink, or a xx:Something Wikipedia key
+            // https://wiki.openstreetmap.org/wiki/Key:wikipedia
+            const wlink = document.createElement('A');
+            wlink.textContent = '(link)';
+            wlink.target = '_blank';
+            wlink.rel = 'nofollow';
+            wlink.href = this.convertWikipediaLink(wikipedialink);
+            htmldiv.appendChild(wlink);
 
             this.mainpanel.appendChild(htmldiv);
         }
@@ -378,12 +377,62 @@ export class OpenHistoricaMapInspector {
         const imgsrc = slide.querySelector('img').src;
         const captiontext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-caption').textContent;
         const attribtext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-credits').textContent;
-console.debug([ captiontext, this.slideshowmodal_captionbox ]);
 
         this.slideshowmodal_image.src = imgsrc;
         this.slideshowmodal_captionbox.textContent = captiontext;
         this.slideshowmodal_creditsbox.textContent = attribtext;
 
         this.slideshowmodal.classList.add('openhistoricalmap-inspector-slideshowmodal-open');
+    }
+
+    parseWikipediaLink (url) {
+        // parse out both plain hyperlinks to a Wikipedia site, and Wikipedia OSM references
+        // hand back a standardized structure for use with Wikipedia: links, excerpt queries, other language-websites, ...
+        const isplainlink = url.match(/^https?:\/\/(\w\w)\.wikipedia\.org\/wiki\/(\w+)#?(.*)$/i);
+        const iswikikey = url.match(/(\w\w):(\w+)#?(.*)$/);
+
+        let lang, name, hash;
+        if (isplainlink) {
+            lang = isplainlink[1];
+            name = isplainlink[2];
+            hash = isplainlink[3];
+        }
+        else if (iswikikey) {
+            lang = iswikikey[1];
+            name = iswikikey[2];
+            hash = iswikikey[3];
+        }
+        else return undefined;
+
+        return {
+            lang,
+            name,
+            hash,
+        };
+    }
+
+    getWikipediaExcerpt (url, callbackfunction) {
+        const wurlbits = this.parseWikipediaLink(url);
+        const wikiurl = `https://${wurlbits.lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exsentences=2&exlimit=1&format=xml&explaintext=true&exintro=true&origin=*&titles=${encodeURIComponent(wurlbits.name)}`;
+
+        const request = new XMLHttpRequest();
+        request.open('GET', wikiurl);
+        request.onload = () => {
+            const xmldoc = new DOMParser().parseFromString(request.response, "text/xml");
+            let excerpt = xmldoc.getElementsByTagName('extract')[0].textContent;
+            excerpt = excerpt.replace(/\(\s*\(\s*listen\s*\)\s*\)/, '');
+
+            callbackfunction(excerpt);
+        };
+        request.send();
+    }
+
+    convertWikipediaLink (url) {
+        const wurlbits = this.parseWikipediaLink(url);
+
+        let wurl = `https://${wurlbits.lang}.wikipedia.org/wiki/${wurlbits.name}`;
+        if (wurlbits.hash) wurl += `#${wurlbits.hash}`;
+
+        return wurl;
     }
 }
