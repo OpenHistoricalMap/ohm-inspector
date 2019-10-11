@@ -1,4 +1,9 @@
+$slideshow-slide-size: 325px;
+
+
 div.openhistoricalmap-inspector-panel {
+    padding: 1em;
+
     .openhistoricalmap-inspector-panel-paragraph {
         strong {
         }
@@ -11,8 +16,8 @@ div.openhistoricalmap-inspector-panel {
     .openhistoricalmap-inspector-panel-slideshow {
         position: relative;
 
-        width: 300px;
-        min-height: 300px;
+        width: $slideshow-slide-size;
+        min-height: $slideshow-slide-size;
         overflow: hidden;
 
         margin-bottom: 1em;
@@ -59,8 +64,8 @@ div.openhistoricalmap-inspector-panel {
             }
 
             img {
-                width: 300px;
-                height: 300px;
+                width: $slideshow-slide-size;
+                height: $slideshow-slide-size;
                 object-fit: cover;
 
                 cursor: pointer;
@@ -86,6 +91,7 @@ div.openhistoricalmap-inspector-panel {
 
 div.openhistoricalmap-inspector-footer {
     margin-top: 1em;
+    padding: 1em;
 }
 
 div.openhistoricalmap-inspector-slideshowmodal {
@@ -95,6 +101,8 @@ div.openhistoricalmap-inspector-slideshowmodal {
     width: 100vw;
     height: 100vh;
     background-color: #CCCCCC;
+
+    z-index: 1000000;
 
     display: none;
     &.openhistoricalmap-inspector-slideshowmodal-open {
@@ -122,12 +130,12 @@ div.openhistoricalmap-inspector-slideshowmodal {
         font-weight: bold;
 
         position: absolute;
-        top: 20px;
-        right: 20px;
+        top: 10px;
+        right: 10px;
         width: 30px;
         height: 30px;
         text-align: center;
-        line-height: 26px;
+        line-height: 25px;
 
         background-color: white;
         border-radius: 50%;
