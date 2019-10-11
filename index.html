@@ -34,21 +34,18 @@
 
             // if we are given a type and ID, load it
             // if not, then we won't even be seeing this sidebar and we have nothing to do
+            inspector = new openhistoricalmap.OpenHistoricaMapInspector({
+                debug: true,
+                onFeatureFail: function (type, id) {
+                    console.log([ 'failed to load feature', type, id ]);
+                },
+                onFeatureLoaded: function (type, id, xmldoc) {
+                    console.log([ 'loaded feature', type, id, xmldoc ]);
+                },
+            });
+
             if (OSMTYPE && OSMID) {
-                inspector = new openhistoricalmap.OpenHistoricaMapInspector({
-                    debug: true,
-                    onFeatureFail: function (type, id) {
-                        console.log([ 'failed to load feature', type, id ]);
-                    },
-                    onFeatureLoaded: function (type, id, xmldoc) {
-                        console.log([ 'loaded feature', type, id, xmldoc ]);
-                    },
-                });
                 inspector.selectFeature(OSMTYPE, OSMID);
-            }
-            else {
-                var thediv = document.querySelector('#sidebar_content');
-                thediv.parentNode.removeChild(thediv);
             }
         }
     </script>

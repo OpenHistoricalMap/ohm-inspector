@@ -42,6 +42,8 @@ inspector.selectFeature('way', 123456);
 
 `selectFeature(type, id)` -- Fetch information from the OSM Overpass API and display it in the Inspector.
 
+`selectFeatureFromUrl()` -- Read the address bar and figure out the OSM feature, e.g. _/way/123456789_ then call `selectFeature()` accordingly. This is a convenience method so you don't need to parse the URL yourself.
+
 `showClassicPanel()` -- Hide the OpenHistoricaMapInspector panel and show the classsic inspector output. The stock/classic OSM inspector content is hidden by default. This behavior is also triggered by the "OHM Way Info" link, for people who prefer the stock OSM readout.
 
 `hideClassicPanel()` -- Hide the classsic inspector output and show the OpenHistoricaMapInspector panel.

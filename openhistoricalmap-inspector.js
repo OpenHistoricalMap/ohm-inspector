@@ -89,7 +89,20 @@ export class OpenHistoricaMapInspector {
         document.body.appendChild(this.slideshowmodal);
     }
 
-    selectFeature(type, id) {
+    selectFeatureFromUrl () {
+        // read the document address URL and tease out a /way/12345678 portion, so we can load that feature from the address bar
+        // this is a convenience so the caller doesn't need to do this same parsing and call selectFeature()
+        const url = document.location.href;
+        const urlbits = url.match(/\/(way|node|relation)\/(\d+)/);
+        if (! urlbits) return console.debug(`selectFeatureFromUrl() page address does not look like a OSM /type/id URL`);
+
+        const type = urlbits[1];
+        const id = urlbits[2];
+        if (this.options.debug) console.debug(`selectFeatureFromUrl found ${type} ${id}`);
+        this.selectFeature(type, id);
+    }
+
+    selectFeature (type, id) {
         // construct API URL e.g. https://openhistoricalmap.org/api/0.6/way/198180481
         const url = `${this.options.apiBaseUrl}/${this.options.apiVersion}/${type}/${id}`;
         if (this.options.debug) console.debug(`OpenHistoricaMapInspector selectFeature(${type}, ${id}) => ${url}`);
