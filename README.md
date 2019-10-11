@@ -14,8 +14,8 @@ For development notes see *DEVELOPMENT.md*
 First, include the JS and CSS files into your project:
 
 ```
-<script type="text/javascript" src="https://OpenHistoricalMap.github.io/openhistoricalmap-inspector/api/api.js"></script>
-<link rel="stylesheet" type="text/css" href="https://OpenHistoricalMap.github.io/openhistoricalmap-inspector/api/api.css" />
+<script type="text/javascript" src="https://openhistoricalmap.github.io/ohm-inspector/api/api.js"></script>
+<link rel="stylesheet" type="text/css" href="https://openhistoricalmap.github.io/ohm-inspector/api/api.css" />
 ```
 
 Then, instantiate the widget with any relevant settings. If you're using the standard OHM sidebar, this should detect the current inspector panels and work with them smoothly.
@@ -46,3 +46,38 @@ inspector.selectFeature('way', 123456);
 
 `hideClassicPanel()` -- Hide the classsic inspector output and show the OpenHistoricaMapInspector panel.
 
+
+## Testing in the Debugger
+
+You may test this functionality in an existing OSM/OHM browser window by pasting code into your browser's debugger. This example uses jQuery since that is used on OSM/OHM website so will be available.
+
+* Open a browser window/tab to a OHM page showig a way, e.g. https://openhistoricalmap.org/way/198180481 or https://openhistoricalmap.org/way/198099635
+
+* Open your browser's debugger console.
+
+* Using the console, inject the CSS/JS tags into the document, so the inspector library is available:
+  ```
+  $('<script type="text/javascript" src="https://openhistoricalmap.github.io/ohm-inspector/api/api.js"></script>').appendTo($(document.head));
+  $('<link rel="stylesheet" type="text/css" href="https://openhistoricalmap.github.io/ohm-inspector/api/api.css" />').appendTo($(document.head));
+  ```
+
+* Confirm that the library is available. This should return information about the inspector class:
+  ```
+  openhistoricalmap.OpenHistoricaMapInspector
+  ```
+
+* Create a new Inspector instance. This will replace the current sidebar content with a blank one, but still allow you to switch to the "classic" OSM inspector panel.
+  ```
+  var inspector = new openhistoricalmap.OpenHistoricaMapInspector();
+  ```
+
+* Have the Inspector read the URL and fetch the OHM feature, showing its information.
+  ```
+  inspector.selectFeatureFromUrl();
+  ```
+
+* You can manually load a feature other than the one indicated in the URL, by specifying its ID.
+  ```
+  inspector.selectFeature('way', 198180481);
+  inspector.selectFeature('way', 198099635);
+  ```
