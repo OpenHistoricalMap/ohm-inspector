@@ -57,34 +57,24 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
 
 * Open your browser's debugger console.
 
-* Using the console, inject the CSS/JS tags into the document, so the inspector library is available:
+* Using the console, inject the CSS/JS tags into the document and open Inspector to whatever feature is showing:
   ```
   $('<script type="text/javascript" src="https://openhistoricalmap.github.io/ohm-inspector/api/api.js"></script>').appendTo($(document.head));
   $('<link rel="stylesheet" type="text/css" href="https://openhistoricalmap.github.io/ohm-inspector/api/api.css" />').appendTo($(document.head));
-
-  // if you are testing locally, do `npm run build` and you can use your own in-development copy
-  // you will see some SSL errors about webpack, ignore them
-  $('<script type="text/javascript" src="http://localhost:8749/api/api.js"></script>').appendTo($(document.head));
-  $('<link rel="stylesheet" type="text/css" href="http://localhost:8749/api/api.css" />').appendTo($(document.head));
-  ```
-
-* Confirm that the library is available. This should return information about the inspector class:
-  ```
-  openhistoricalmap.OpenHistoricaMapInspector
-  ```
-
-* Create a new Inspector instance. This will replace the current sidebar content with a blank one, but still allow you to switch to the "classic" OSM inspector panel.
-  ```
-  var inspector = new openhistoricalmap.OpenHistoricaMapInspector();
-  ```
-
-* Have the Inspector read the URL and fetch the OHM feature, showing its information.
-  ```
-  inspector.selectFeatureFromUrl();
+  setTimeout(function () {
+    var inspector = new openhistoricalmap.OpenHistoricaMapInspector();
+    inspector.selectFeatureFromUrl();
+  }, 1000);
   ```
 
 * You can manually load a feature other than the one indicated in the URL, by specifying its ID.
   ```
   inspector.selectFeature('way', 198180481);
   inspector.selectFeature('way', 198099635);
+  ```
+
+* If you are testing locally, you could use your own in-development copy by using these URLs instead _after_ you run `npm run build` to compile a copy. You may see some SSL errors about webpack, ignore them.
+  ```
+  $('<script type="text/javascript" src="http://localhost:8749/api/api.js"></script>').appendTo($(document.head));
+  $('<link rel="stylesheet" type="text/css" href="http://localhost:8749/api/api.css" />').appendTo($(document.head));
   ```

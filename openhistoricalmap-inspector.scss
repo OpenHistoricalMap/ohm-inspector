@@ -3,6 +3,7 @@ $slideshow-slide-size: 325px;
 
 div.openhistoricalmap-inspector-panel {
     padding: 1em;
+    padding-top: 0;
 
     .openhistoricalmap-inspector-panel-paragraph {
         strong {
@@ -11,6 +12,9 @@ div.openhistoricalmap-inspector-panel {
         }
         a {
         }
+    }
+
+    h2.openhistoricalmap-inspector-panel-title {
     }
 
     .openhistoricalmap-inspector-panel-slideshow {

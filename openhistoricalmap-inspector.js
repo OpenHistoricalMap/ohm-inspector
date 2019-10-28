@@ -1,7 +1,7 @@
 export class OpenHistoricaMapInspector {
     constructor (options) {
         // try to detect local-dev, or else assume we're being served from Github Pages
-        this.code_base_url = document.location.host.indexOf('localhost') == 0 ? document.location.href : 'https://openhistoricalmap.github.io/ohm-inspector';
+        this.code_base_url = document.location.host.indexOf('localhost') == 0 ? '.' : 'https://openhistoricalmap.github.io/ohm-inspector';
 
         // step 1: load default options, merging their passed-in without these defaults
         this.options = Object.assign({
@@ -9,7 +9,7 @@ export class OpenHistoricaMapInspector {
             apiVersion: "0.6",
             classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
             classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
-            featureTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
+            oldTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
             slideshowPrevIcon: `${this.code_base_url}/etc/Octicons-chevron-left.svg`,      // IMG SRC to the image slideshow buttons
             slideshowNextIcon: `${this.code_base_url}/etc/Octicons-chevron-right.svg`,     // IMG SRC to the image slideshow buttons
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
@@ -25,9 +25,8 @@ export class OpenHistoricaMapInspector {
         // we won't actually have anything to show until selectFeature() is called
         this.oldpanel = document.querySelector(this.options.classicDivSelector);
         this.oldfooter = document.querySelector(this.options.classicFooterSelector);
-        this.titlebar = document.querySelector(this.options.featureTitleBar);
+        this.oldtitlebar = document.querySelector(this.options.oldTitleBar);
 
-        this.initTitlebar();
         this.initFooter();
         this.initPanel();
         this.initSlideshowModal();
@@ -39,10 +38,6 @@ export class OpenHistoricaMapInspector {
         this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
 
         this.oldpanel.parentNode.insertBefore(this.mainpanel, this.oldpanel.nextSibling);
-    }
-
-    initTitlebar () {
-        this.titlebar.innerHTML = '';
     }
 
     initFooter () {
@@ -126,13 +121,13 @@ export class OpenHistoricaMapInspector {
     }
 
     renderNetworkError () {
-        this.titlebar.innerHTML = 'Error';
+        this.oldtitlebar.innerHTML = 'Error';
         this.footer.style.display = 'none';
         this.mainpanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
-        this.titlebar.innerHTML = 'Not Found';
+        this.oldtitlebar.innerHTML = 'Not Found';
         this.footer.style.display = 'none';
         this.mainpanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
     }
@@ -153,11 +148,14 @@ export class OpenHistoricaMapInspector {
     }
 
     renderFeatureDetails (type, id, xmldoc) {
-        // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.footer, this.titlebar, this.mainpanel ]);
+        // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.footer, this.mainpanel ]);
 
         // titlebar: use the name tag and the <whatever>'s id attribute
+        const titlebar = document.createElement('H2');
+        titlebar.classList.add('openhistoricalmap-inspector-panel-title');
         const name = this.getTagValue(xmldoc, 'name');
-        this.titlebar.textContent = `${name} (${type} ${id})`;
+        titlebar.textContent = name;
+        this.mainpanel.appendChild(titlebar);
 
         // main body: first, any image:X tags forming a slideshow
         const slideshowimages = [];
@@ -372,6 +370,8 @@ export class OpenHistoricaMapInspector {
         // goal here is to hide our own DIV and show that one
         this.oldpanel.style.display = 'block';
         this.oldfooter.style.display = 'block';
+//GDA
+        this.oldtitlebar.style.display = 'block';
         this.mainpanel.style.display = 'none';
 
         this.footer_classicviewbutton.style.display = 'none';
@@ -383,6 +383,8 @@ export class OpenHistoricaMapInspector {
         // goal here is to hide that DIV and show our own
         this.oldpanel.style.display = 'none';
         this.oldfooter.style.display = 'none';
+//GDA
+        this.oldtitlebar.style.display = 'none';
         this.mainpanel.style.display = 'block';
 
         this.footer_classicviewbutton.style.display = 'inline';
