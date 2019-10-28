@@ -109,15 +109,18 @@ span.openhistoricalmap-inspector-fluidbox-caption {
     display: block;
     z-index: 5000;
     position: fixed;
-    bottom: 2.5vh;  /* Fluidbox uses 95% of W and H, so 2.5% aligns this to the photo's corners */
-    left: 2.5vw;
-    width: calc(100% - 5vw - 20px);  /* 95% screen width to match photo, take back some for side padding defined below */
+    bottom: 0;
+    left: 0;
+    width: 100%;
 
     color: black;
     background-color: silver;
 
     font-size: 18px;
     text-align: center;
-    padding-right: 10px;  /* see also width above */
+    padding-right: 10px;
     padding-left: 10px;
+}
+.fluidbox__overlay {
+    background-color: rgba(255, 255, 255, 0.5) !important;
 }

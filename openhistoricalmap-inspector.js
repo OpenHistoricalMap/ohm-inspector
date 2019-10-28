@@ -47,8 +47,8 @@ export class OpenHistoricaMapInspector {
 
         const $head = window.jQuery('head');
         window.jQuery('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>').appendTo($head);
-        window.jQuery('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fluidbox/2.0.5/js/jquery.fluidbox.min.js"></script>').appendTo($head);
-        window.jQuery('<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fluidbox/2.0.5/css/fluidbox.min.css" />').appendTo($head);
+        window.jQuery(`<script type="text/javascript" src="${this.code_base_url}/etc/Fluidbox/dist/js/jquery.fluidbox.min.js"></script>`).appendTo($head);
+        window.jQuery(`<link rel="stylesheet" type="text/css" href="${this.code_base_url}/etc/Fluidbox/dist/css/fluidbox.min.css" />`).appendTo($head);
 //GDA
     }
 
@@ -230,9 +230,15 @@ export class OpenHistoricaMapInspector {
             // - jQuery used here as this is what Fluidbox uses
             // - do this before selectSlide() even though it means FOUC; Fluidbox will not touch non-visible items
             // - open/close trigger to move the lightbox into the BODY element, so it's not constrained to the Sidebar width
+            // - we want a different width percentage, lower for wider screens and more for narrow
+            let fluidboxmaxwidth = 0;  // the default, no max width
+            const w = window.jQuery(window).width();
+            if (w > 1024) fluidboxmaxwidth = 800;
+
             window.jQuery('div.openhistoricalmap-inspector-panel-slideshow-slide a')
             .fluidbox({
                 immediateOpen: true,
+                maxWidth: fluidboxmaxwidth,
             })
             .on('openstart.fluidbox', function () {
                 const $this = window.jQuery(this);  // the A which triggered this
@@ -242,7 +248,7 @@ export class OpenHistoricaMapInspector {
             })
             .on('openend.fluidbox', function () {
                 const $this = window.jQuery(this);  // the A which triggered this
-                const captiontext = $this.find('a').prop('href');
+                const captiontext = $this.find('a').prop('href') || 'Gee whiz wowie this is some fun text to see at the bottom of my screen.';
                 if (captiontext) {
                     const $caption = window.jQuery(`<span class="openhistoricalmap-inspector-fluidbox-caption">${captiontext}</span>`);
                     $caption.appendTo($this);
