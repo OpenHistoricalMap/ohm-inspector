@@ -53,7 +53,7 @@ inspector.selectFeature('way', 123456);
 
 You may test this functionality in an existing OSM/OHM browser window by pasting code into your browser's debugger. This example uses jQuery since that is used on OSM/OHM website so will be available.
 
-* Open a browser window/tab to a OHM page showig a way, e.g. https://openhistoricalmap.org/way/198180481 or https://openhistoricalmap.org/way/198099635
+* Open a browser window/tab to a OHM page showing a way, e.g. https://openhistoricalmap.org/way/198180481 or https://openhistoricalmap.org/way/198099635
 
 * Open your browser's debugger console.
 
