@@ -9,7 +9,7 @@ export class OpenHistoricaMapInspector {
             apiVersion: "0.6",
             classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
             classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
-            oldTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
+            classicTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
             slideshowPrevIcon: `${this.code_base_url}/etc/Octicons-chevron-left.svg`,      // IMG SRC to the image slideshow buttons
             slideshowNextIcon: `${this.code_base_url}/etc/Octicons-chevron-right.svg`,     // IMG SRC to the image slideshow buttons
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
@@ -25,11 +25,11 @@ export class OpenHistoricaMapInspector {
         // we won't actually have anything to show until selectFeature() is called
         this.oldpanel = document.querySelector(this.options.classicDivSelector);
         this.oldfooter = document.querySelector(this.options.classicFooterSelector);
-        this.oldtitlebar = document.querySelector(this.options.oldTitleBar);
+        this.classicTitleBar = document.querySelector(this.options.classicTitleBar);
 
+        this.initSlideshowLightbox();
         this.initFooter();
         this.initPanel();
-        this.initSlideshowModal();
         this.hideClassicPanel();
     }
 
@@ -38,6 +38,18 @@ export class OpenHistoricaMapInspector {
         this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
 
         this.oldpanel.parentNode.insertBefore(this.mainpanel, this.oldpanel.nextSibling);
+    }
+
+    initSlideshowLightbox () {
+        // the lightbox behavior on the slideshow is handled by Fluidbox
+        // see renderFeatureDetails() where these click behaviuors are set up
+        // Fluidbox uses jQuery, which OSM does as well, so we're gonna break out of our non-jQuery mode here for a moment
+
+        const $head = window.jQuery('head');
+        window.jQuery('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>').appendTo($head);
+        window.jQuery('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fluidbox/2.0.5/js/jquery.fluidbox.min.js"></script>').appendTo($head);
+        window.jQuery('<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fluidbox/2.0.5/css/fluidbox.min.css" />').appendTo($head);
+//GDA
     }
 
     initFooter () {
@@ -60,31 +72,6 @@ export class OpenHistoricaMapInspector {
         this.footer_inspectorviewbutton.addEventListener('click', () => {
             this.hideClassicPanel();
         });
-    }
-
-    initSlideshowModal () {
-        this.slideshowmodal = document.createElement('DIV');
-        this.slideshowmodal.classList.add('openhistoricalmap-inspector-slideshowmodal');
-
-        this.slideshowmodal.innerHTML = `
-            <div class="openhistoricalmap-inspector-slideshowmodal-closebutton">&times;</div>
-            <div class="openhistoricalmap-inspector-slideshowmodal-content">
-                <img class="openhistoricalmap-inspector-slideshowmodal-image" src="#" />
-                <div class="openhistoricalmap-inspector-slideshowmodal-caption"></div>
-                <div class="openhistoricalmap-inspector-slideshowmodal-credits"></div>
-            </div>
-        `;
-
-        this.slideshowmodal_image = this.slideshowmodal.querySelector('img');
-        this.slideshowmodal_captionbox = this.slideshowmodal.querySelector('.openhistoricalmap-inspector-slideshowmodal-caption');
-        this.slideshowmodal_creditsbox = this.slideshowmodal.querySelector('.openhistoricalmap-inspector-slideshowmodal-credits');
-
-        this.slideshowmodal_closebutton = this.slideshowmodal.querySelector('div.openhistoricalmap-inspector-slideshowmodal-closebutton');
-        this.slideshowmodal_closebutton.addEventListener('click', () => {
-            this.slideshowmodal.classList.remove('openhistoricalmap-inspector-slideshowmodal-open');
-        });
-
-        document.body.appendChild(this.slideshowmodal);
     }
 
     selectFeatureFromUrl () {
@@ -121,13 +108,13 @@ export class OpenHistoricaMapInspector {
     }
 
     renderNetworkError () {
-        this.oldtitlebar.innerHTML = 'Error';
+        this.classicTitleBar.innerHTML = 'Error';
         this.footer.style.display = 'none';
         this.mainpanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
-        this.oldtitlebar.innerHTML = 'Not Found';
+        this.classicTitleBar.innerHTML = 'Not Found';
         this.footer.style.display = 'none';
         this.mainpanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
     }
@@ -185,8 +172,9 @@ export class OpenHistoricaMapInspector {
             slideshowimages.forEach((imageinfo, imagei) => {
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
+                //slide.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');  // done by selectSlide() but we need FOUC cuz Fluidbox will skip non-visible items
                 slide.setAttribute('data-slide-number', imagei);
-                slide.innerHTML = `<img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" />`;
+                slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" /></a>`;
 
                 if (imageinfo.captiontext) {
                     const textbox = document.createElement('SPAN');
@@ -202,10 +190,6 @@ export class OpenHistoricaMapInspector {
                 }
 
                 htmldiv.appendChild(slide);
-
-                slide.querySelector('img').addEventListener('click', () => {
-                    this.showSlideshowLightbox(slide);
-                });
             });
 
             const slideshow_slides = htmldiv.querySelectorAll('.openhistoricalmap-inspector-panel-slideshow div.openhistoricalmap-inspector-panel-slideshow-slide');
@@ -213,10 +197,10 @@ export class OpenHistoricaMapInspector {
             const selectSlide = (picki) => {
                 slideshow_slides.forEach(($img, i) => {
                     if (i == picki) {
-                        $img.classList.add('openhistoricalmap-inspector-panel-slideshow-selected');
+                        $img.classList.remove('openhistoricalmap-inspector-panel-slideshow-hidden');
                     }
                     else {
-                        $img.classList.remove('openhistoricalmap-inspector-panel-slideshow-selected');
+                        $img.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');
                     }
 
                     selectedslide = picki;
@@ -238,11 +222,51 @@ export class OpenHistoricaMapInspector {
                 selectSlide(selectedslide + 1);
             });
 
+            // done with setup; stick it into the DOM
+            this.mainpanel.appendChild(htmldiv);
+
+            // add the Fluidbox lightbox behavior to the slideshow images
+            // see also initSlideshowLightbox() where the Fluidbox lightbox code was loaded
+            // - jQuery used here as this is what Fluidbox uses
+            // - do this before selectSlide() even though it means FOUC; Fluidbox will not touch non-visible items
+            // - open/close trigger to move the lightbox into the BODY element, so it's not constrained to the Sidebar width
+            window.jQuery('div.openhistoricalmap-inspector-panel-slideshow-slide a')
+            .fluidbox({
+                immediateOpen: true,
+            })
+            .on('openstart.fluidbox', function () {
+                const $this = window.jQuery(this);  // the A which triggered this
+                const $olddiv = $this.closest('div.openhistoricalmap-inspector-panel-slideshow-slide');
+                $this.data('olddiv', $olddiv);
+                $this.appendTo(window.jQuery('body'));
+            })
+            .on('openend.fluidbox', function () {
+                const $this = window.jQuery(this);  // the A which triggered this
+                const captiontext = $this.find('a').prop('href');
+                if (captiontext) {
+                    const $caption = window.jQuery(`<span class="openhistoricalmap-inspector-fluidbox-caption">${captiontext}</span>`);
+                    $caption.appendTo($this);
+                    $this.data('caption', $caption);
+                }
+                else {
+                    $this.data('caption', null);
+                }
+            })
+            .on('closestart.fluidbox', function () {
+                const $this = window.jQuery(this);  // the A which triggered this
+                const $caption = $this.data('caption');
+                if ($caption) $caption.remove();
+                $this.data('caption', null);
+            })
+            .on('closeend.fluidbox', function () {
+                const $this = window.jQuery(this);  // the A which triggered this
+                const $olddiv = $this.data('olddiv');
+                $this.appendTo($olddiv);
+            });
+
             // select the first image
             let selectedslide = 0;
             selectSlide(selectedslide);
-
-            this.mainpanel.appendChild(htmldiv);
         }
 
         // main body: then, a few hand-curated fields forming a table
@@ -370,8 +394,7 @@ export class OpenHistoricaMapInspector {
         // goal here is to hide our own DIV and show that one
         this.oldpanel.style.display = 'block';
         this.oldfooter.style.display = 'block';
-//GDA
-        this.oldtitlebar.style.display = 'block';
+        this.classicTitleBar.style.display = 'block';
         this.mainpanel.style.display = 'none';
 
         this.footer_classicviewbutton.style.display = 'none';
@@ -383,24 +406,11 @@ export class OpenHistoricaMapInspector {
         // goal here is to hide that DIV and show our own
         this.oldpanel.style.display = 'none';
         this.oldfooter.style.display = 'none';
-//GDA
-        this.oldtitlebar.style.display = 'none';
+        this.classicTitleBar.style.display = 'none';
         this.mainpanel.style.display = 'block';
 
         this.footer_classicviewbutton.style.display = 'inline';
         this.footer_inspectorviewbutton.style.display = 'none';
-    }
-
-    showSlideshowLightbox (slide) {
-        const imgsrc = slide.querySelector('img').src;
-        const captiontext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-caption').textContent;
-        const attribtext = slide.querySelector('.openhistoricalmap-inspector-panel-slideshow-credits').textContent;
-
-        this.slideshowmodal_image.src = imgsrc;
-        this.slideshowmodal_captionbox.textContent = captiontext;
-        this.slideshowmodal_creditsbox.textContent = attribtext;
-
-        this.slideshowmodal.classList.add('openhistoricalmap-inspector-slideshowmodal-open');
     }
 
     parseWikipediaLink (url) {
