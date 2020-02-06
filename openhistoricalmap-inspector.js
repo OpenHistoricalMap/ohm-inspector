@@ -1,7 +1,7 @@
 export class OpenHistoricaMapInspector {
     constructor (options) {
         // try to detect local-dev, or else assume we're being served from Github Pages
-        this.code_base_url = document.location.host.indexOf('localhost') == 0 ? '.' : 'https://openhistoricalmap.github.io/ohm-inspector';
+        this.code_base_url = document.location.host.indexOf('localhost') == 0 ? '.' : 'https://open-historical-map-labs.github.io/ohm-inspector';
 
         // step 1: load default options, merging their passed-in without these defaults
         this.options = Object.assign({

@@ -4,7 +4,7 @@ An enhancement to the OpenHistoricalMap Inspector in the left sidebar.
 
 Github: https://github.com/OpenHistoricalMap/ohm-inspector/
 
-Demo and API Docs: https://openhistoricalmap.github.io/ohm-inspector/
+Demo and API Docs: https://open-historical-map-labs.github.io/ohm-inspector/
 
 For development notes see *DEVELOPMENT.md*
 
@@ -14,8 +14,8 @@ For development notes see *DEVELOPMENT.md*
 First, include the JS and CSS files into your project:
 
 ```
-<script type="text/javascript" src="https://openhistoricalmap.github.io/ohm-inspector/api/api.js"></script>
-<link rel="stylesheet" type="text/css" href="https://openhistoricalmap.github.io/ohm-inspector/api/api.css" />
+<script type="text/javascript" src="https://open-historical-map-labs.github.io/ohm-inspector/api/api.js"></script>
+<link rel="stylesheet" type="text/css" href="https://open-historical-map-labs.github.io/ohm-inspector/api/api.css" />
 ```
 
 Then, instantiate the widget with any relevant settings. If you're using the standard OHM sidebar, this should detect the current inspector panels and work with them smoothly.
@@ -59,8 +59,8 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
 
 * Using the console, inject the CSS/JS tags into the document and open Inspector to whatever feature is showing:
   ```
-  $('<script type="text/javascript" src="https://openhistoricalmap.github.io/ohm-inspector/api/api.js"></script>').appendTo($(document.head));
-  $('<link rel="stylesheet" type="text/css" href="https://openhistoricalmap.github.io/ohm-inspector/api/api.css" />').appendTo($(document.head));
+  $('<script type="text/javascript" src="https://open-historical-map-labs.github.io/ohm-inspector/api/api.js"></script>').appendTo($(document.head));
+  $('<link rel="stylesheet" type="text/css" href="https://open-historical-map-labs.github.io/ohm-inspector/api/api.css" />').appendTo($(document.head));
   setTimeout(function () {
     var inspector = new openhistoricalmap.OpenHistoricaMapInspector();
     inspector.selectFeatureFromUrl();
