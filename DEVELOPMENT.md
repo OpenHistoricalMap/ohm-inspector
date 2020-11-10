@@ -18,6 +18,6 @@ The command `npm run deploy` will do a `npm run build` followed by a  git add, c
 
 ### Deployment, Docs, and Demos
 
-https://open-historical-map-labs.github.io/ohm-inspector/ The API endpoint, documentation, and demonstration application are all served directly from *master* branch via Github Pages. The *index.html* file forms the home page, including the demo.
+https://openhistoricalmap.github.io/ohm-inspector/ The API endpoint, documentation, and demonstration application are all served directly from *master* branch via Github Pages. The *index.html* file forms the home page, including the demo.
 
 https://github.com/OpenHistoricalMap/ohm-inspector/ The *README.md* includes API documentation.
