@@ -78,3 +78,14 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
   $('<script type="text/javascript" src="http://localhost:8749/api/api.js"></script>').appendTo($(document.head));
   $('<link rel="stylesheet" type="text/css" href="http://localhost:8749/api/api.css" />').appendTo($(document.head));
   ```
+
+### What tags do you add in OHM?
+
+The Inspector handles only specific tags and then turns 
+
+- titlebar: use the `name` tag and the `<whatever>`’s `id` attribute
+- main body: 
+  - any `image:X` tags form a slideshow, where the value is the URL of an image and X is an integer to allow n photos attached to this entity. Images should be stored on a public server (not personal filesharing services) and should not be hot-linked from other people's websites. We recommend contributing to and using images from WikiMedia Commons.
+  - `start_date` and `end_date` as `YYYY-MM-DD`
+  - `wikipedia` if it has a valid Wikipedia URL or ID, pulls in an excerpt and links out to full entry
+  - `followed_by` will show as a link if the value is a URL or as "**Source:** `text`" if it is not
