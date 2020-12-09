@@ -79,7 +79,7 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
   $('<link rel="stylesheet" type="text/css" href="http://localhost:8749/api/api.css" />').appendTo($(document.head));
   ```
 
-### What tags do you add in OHM?
+## What tags do you add in OHM?
 
 The Inspector handles only specific tags and then turns 
 
