@@ -1,3 +1,7 @@
+const SimpleLightbox = require('./etc/simpleLightbox-2.1.0/dist/simpleLightbox.js');  // eslint-disable-line
+require('./etc/simpleLightbox-2.1.0/dist/simpleLightbox.css');  // eslint-disable-line
+
+
 export class OpenHistoricaMapInspector {
     constructor (options) {
         // try to detect local-dev, or else assume we're being served from Github Pages
@@ -162,7 +166,6 @@ export class OpenHistoricaMapInspector {
             slideshowimages.forEach((imageinfo, imagei) => {
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
-                //slide.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');  // done by selectSlide() but we need FOUC cuz Fluidbox will skip non-visible items
                 slide.setAttribute('data-slide-number', imagei);
                 slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" /></a>`;
 
@@ -215,48 +218,16 @@ export class OpenHistoricaMapInspector {
             // done with setup; stick it into the DOM
             this.mainpanel.appendChild(htmldiv);
 
-            // add the Fluidbox lightbox behavior to the slideshow images
-            // - jQuery used here as this is what Fluidbox uses
-            // - do this before selectSlide() even though it means FOUC; Fluidbox will not touch non-visible items
-            // - open/close trigger to move the lightbox into the BODY element, so it's not constrained to the Sidebar width
-            // - we want a different width percentage, lower for wider screens and more for narrow
-            let fluidboxmaxwidth = 0;  // the default, no max width
-            const w = window.jQuery(window).width();
-            if (w > 1024) fluidboxmaxwidth = 800;
-
-            window.jQuery('div.openhistoricalmap-inspector-panel-slideshow-slide a')
-            .fluidbox({
-                immediateOpen: true,
-                maxWidth: fluidboxmaxwidth,
-            })
-            .on('openstart.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $olddiv = $this.closest('div.openhistoricalmap-inspector-panel-slideshow-slide');
-                $this.data('olddiv', $olddiv);
-                $this.appendTo(window.jQuery('body'));
-            })
-            .on('openend.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const captiontext = $this.find('a').prop('href') || 'Gee whiz wowie this is some fun text to see at the bottom of my screen.';
-                if (captiontext) {
-                    const $caption = window.jQuery(`<span class="openhistoricalmap-inspector-fluidbox-caption">${captiontext}</span>`);
-                    $caption.appendTo($this);
-                    $this.data('caption', $caption);
-                }
-                else {
-                    $this.data('caption', null);
-                }
-            })
-            .on('closestart.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $caption = $this.data('caption');
-                if ($caption) $caption.remove();
-                $this.data('caption', null);
-            })
-            .on('closeend.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $olddiv = $this.data('olddiv');
-                $this.appendTo($olddiv);
+            // add the SimpleLightbox behavior to the slideshow images
+            // have to attach captions ourselves first, since it looks for title= or data-caption= on the A not a IMG under it
+            const slideshowimagelinks = htmldiv.querySelectorAll('div.openhistoricalmap-inspector-panel-slideshow-slide a');
+            slideshowimagelinks.forEach(function (a) {
+                const img = a.querySelector('img');
+                const caption = img.title || '';
+                a.setAttribute('title', caption);
+            });
+            new SimpleLightbox({
+                elements: slideshowimagelinks,
             });
 
             // select the first image

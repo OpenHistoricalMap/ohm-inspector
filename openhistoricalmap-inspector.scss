@@ -93,36 +93,10 @@ div.openhistoricalmap-inspector-panel {
                 font-style: italic;
             }
         }
-
-        .fluidbox--opened img {
-        }
     }
 }
 
 div.openhistoricalmap-inspector-footer {
     margin-top: 1em;
     padding: 1em;
-}
-
-span.openhistoricalmap-inspector-fluidbox-caption {
-    display: block;
-    z-index: 5000;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-
-    color: black;
-    background-color: silver;
-
-    font-size: 18px;
-    text-align: center;
-    padding-right: 10px;
-    padding-left: 10px;
-}
-.fluidbox__overlay {
-    background-color: rgba(255, 255, 255, 0.6) !important;
-}
-.fluidbox--opened .fluidbox__ghost {
-    border: 3px double #333333;
 }

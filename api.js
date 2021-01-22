@@ -7,11 +7,6 @@
 // miscellaneous components and polyfills
 require('./polyfills.js');  // eslint-disable-line
 
-// Fluidbox for the lightbox for images
-require('./etc/jquery.ba-throttle-debounce.js');  // eslint-disable-line
-require('./etc/Fluidbox/src/css/fluidbox.scss');  // eslint-disable-line
-require('./etc/Fluidbox/src/js/jquery.fluidbox.js');  // eslint-disable-line
-
 // the HTML file isn't processed at all, but we do "process" it so as to trigger a page reload when running under webpack-dev-server
 require('./index.html');  // eslint-disable-line
 
