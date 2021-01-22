@@ -1,7 +1,7 @@
 /*
  * JavaScript entry point for webpack to compile the API widget
  * Entry points for the stylesheet and the widget's JS code
- * and an export which the webpack.config.js will place into the OpenHistoricaMapInspector namespace
+ * and an export which the webpack.config.js will place into the "var openhistoricalmap" namespace
  */
 
 // miscellaneous components and polyfills
