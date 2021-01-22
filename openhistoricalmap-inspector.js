@@ -1,10 +1,14 @@
+const SimpleLightbox = require('./etc/simpleLightbox-2.1.0/dist/simpleLightbox.js');  // eslint-disable-line
+require('./etc/simpleLightbox-2.1.0/dist/simpleLightbox.css');  // eslint-disable-line
+
+
 export class OpenHistoricaMapInspector {
     constructor (options) {
         // try to detect local-dev, or else assume we're being served from Github Pages
-        //this.code_base_url = document.location.host.indexOf('localhost') == 0 ? '.' : 'https://openhistoricalmap.github.io/ohm-inspector';
-
-        //testing manual setting of localhost vs production, since when testing locally within ohm-website, we have localhost in URL, but we need to pull Inspector code from GH Pages
-        this.code_base_url = 'https://openhistoricalmap.github.io/ohm-inspector';
+        this.localdevelopment = document.location.hostname === 'localhost';
+        const codeurl_local = 'http://localhost:8749/';
+        const codeurl_web = 'https://openhistoricalmap.github.io/ohm-inspector';
+        this.code_base_url = this.localdevelopment ? codeurl_local : codeurl_web;
 
         // step 1: load default options, merging their passed-in without these defaults
         this.options = Object.assign({
@@ -30,7 +34,6 @@ export class OpenHistoricaMapInspector {
         this.oldfooter = document.querySelector(this.options.classicFooterSelector);
         this.classicTitleBar = document.querySelector(this.options.classicTitleBar);
 
-        this.initSlideshowLightbox();
         this.initFooter();
         this.initPanel();
         this.hideClassicPanel();
@@ -41,18 +44,6 @@ export class OpenHistoricaMapInspector {
         this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
 
         this.oldpanel.parentNode.insertBefore(this.mainpanel, this.oldpanel.nextSibling);
-    }
-
-    initSlideshowLightbox () {
-        // the lightbox behavior on the slideshow is handled by Fluidbox
-        // see renderFeatureDetails() where these click behaviuors are set up
-        // Fluidbox uses jQuery, which OSM does as well, so we're gonna break out of our non-jQuery mode here for a moment
-
-        const $head = window.jQuery('head');
-        window.jQuery('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>').appendTo($head);
-        window.jQuery(`<script type="text/javascript" src="${this.code_base_url}/etc/Fluidbox/dist/js/jquery.fluidbox.min.js"></script>`).appendTo($head);
-        window.jQuery(`<link rel="stylesheet" type="text/css" href="${this.code_base_url}/etc/Fluidbox/dist/css/fluidbox.min.css" />`).appendTo($head);
-//GDA
     }
 
     initFooter () {
@@ -175,7 +166,6 @@ export class OpenHistoricaMapInspector {
             slideshowimages.forEach((imageinfo, imagei) => {
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
-                //slide.classList.add('openhistoricalmap-inspector-panel-slideshow-hidden');  // done by selectSlide() but we need FOUC cuz Fluidbox will skip non-visible items
                 slide.setAttribute('data-slide-number', imagei);
                 slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" /></a>`;
 
@@ -228,49 +218,16 @@ export class OpenHistoricaMapInspector {
             // done with setup; stick it into the DOM
             this.mainpanel.appendChild(htmldiv);
 
-            // add the Fluidbox lightbox behavior to the slideshow images
-            // see also initSlideshowLightbox() where the Fluidbox lightbox code was loaded
-            // - jQuery used here as this is what Fluidbox uses
-            // - do this before selectSlide() even though it means FOUC; Fluidbox will not touch non-visible items
-            // - open/close trigger to move the lightbox into the BODY element, so it's not constrained to the Sidebar width
-            // - we want a different width percentage, lower for wider screens and more for narrow
-            let fluidboxmaxwidth = 0;  // the default, no max width
-            const w = window.jQuery(window).width();
-            if (w > 1024) fluidboxmaxwidth = 800;
-
-            window.jQuery('div.openhistoricalmap-inspector-panel-slideshow-slide a')
-            .fluidbox({
-                immediateOpen: true,
-                maxWidth: fluidboxmaxwidth,
-            })
-            .on('openstart.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $olddiv = $this.closest('div.openhistoricalmap-inspector-panel-slideshow-slide');
-                $this.data('olddiv', $olddiv);
-                $this.appendTo(window.jQuery('body'));
-            })
-            .on('openend.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const captiontext = $this.find('a').prop('href') || 'Gee whiz wowie this is some fun text to see at the bottom of my screen.';
-                if (captiontext) {
-                    const $caption = window.jQuery(`<span class="openhistoricalmap-inspector-fluidbox-caption">${captiontext}</span>`);
-                    $caption.appendTo($this);
-                    $this.data('caption', $caption);
-                }
-                else {
-                    $this.data('caption', null);
-                }
-            })
-            .on('closestart.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $caption = $this.data('caption');
-                if ($caption) $caption.remove();
-                $this.data('caption', null);
-            })
-            .on('closeend.fluidbox', function () {
-                const $this = window.jQuery(this);  // the A which triggered this
-                const $olddiv = $this.data('olddiv');
-                $this.appendTo($olddiv);
+            // add the SimpleLightbox behavior to the slideshow images
+            // have to attach captions ourselves first, since it looks for title= or data-caption= on the A not a IMG under it
+            const slideshowimagelinks = htmldiv.querySelectorAll('div.openhistoricalmap-inspector-panel-slideshow-slide a');
+            slideshowimagelinks.forEach(function (a) {
+                const img = a.querySelector('img');
+                const caption = img.title || '';
+                a.setAttribute('title', caption);
+            });
+            new SimpleLightbox({
+                elements: slideshowimagelinks,
             });
 
             // select the first image
