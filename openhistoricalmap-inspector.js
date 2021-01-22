@@ -4,12 +4,6 @@ require('./etc/simpleLightbox-2.1.0/dist/simpleLightbox.css');  // eslint-disabl
 
 export class OpenHistoricaMapInspector {
     constructor (options) {
-        // try to detect local-dev, or else assume we're being served from Github Pages
-        this.localdevelopment = document.location.hostname === 'localhost';
-        const codeurl_local = 'http://localhost:8749/';
-        const codeurl_web = 'https://openhistoricalmap.github.io/ohm-inspector';
-        this.code_base_url = this.localdevelopment ? codeurl_local : codeurl_web;
-
         // step 1: load default options, merging their passed-in without these defaults
         this.options = Object.assign({
             apiBaseUrl: "https://openhistoricalmap.org/api/",                   // the API URL and version to use
@@ -17,8 +11,6 @@ export class OpenHistoricaMapInspector {
             classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
             classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
             classicTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
-            slideshowPrevIcon: `${this.code_base_url}/etc/Octicons-chevron-left.svg`,      // IMG SRC to the image slideshow buttons
-            slideshowNextIcon: `${this.code_base_url}/etc/Octicons-chevron-right.svg`,     // IMG SRC to the image slideshow buttons
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -160,8 +152,8 @@ export class OpenHistoricaMapInspector {
             htmldiv.classList.add('openhistoricalmap-inspector-panel-slideshow');
 
             htmldiv.innerHTML = `
-                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-prev" href="javascript:void(0);"><img src="${this.options.slideshowPrevIcon}" /></a>
-                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-next" href="javascript:void(0);"><img src="${this.options.slideshowNextIcon}" /></a>
+                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-prev" href="javascript:void(0);"><span></span></a>
+                <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-next" href="javascript:void(0);"><span></span></a>
             `;
             slideshowimages.forEach((imageinfo, imagei) => {
                 const slide = document.createElement('DIV');

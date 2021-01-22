@@ -30,33 +30,42 @@ div.openhistoricalmap-inspector-panel {
         a.openhistoricalmap-inspector-panel-slideshow-prevnext {
             position: absolute;
             top: 145px;
-
-            img {
-                height: 40px;
-            }
-
-            background-color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            text-align: center;
-
             z-index: 1000;
 
-            &.openhistoricalmap-inspector-panel-slideshow-prev {
-                left: 5px;
+            display: inline-block;  /* the link itself: white circle, fixed size, positioned */
+            width: 40px;
+            height: 40px;
+            background-color: white !important;
+            border-radius: 50%;
 
-                img {
-                    margin-right: 5px;
+            span {  /* the arrow images: span with background image */
+                display: inline-block;
+                width: 100%;
+                height: 100%;
+                background-size: 20px auto !important;
+            }
+
+            &.openhistoricalmap-inspector-panel-slideshow-prev {
+                left: 5px;  /* the white circle A button */
+
+                span {  /* the empty span with a background-image */
+                    background: url(./etc/Octicons-chevron-left.svg);
+                    position: relative;
+                    left: 8px;
+                    top: -2px;
                 }
             }
             &.openhistoricalmap-inspector-panel-slideshow-next {
-                right: 5px;
+                right: 5px;  /* the white circle A button */
 
-                img {
-                    margin-left: 5px;
+                span {  /* the empty span with a background-image */
+                    background: url(./etc/Octicons-chevron-right.svg);
+                    position: relative;
+                    left: 11px;
+                    top: 3px;
                 }
             }
+
             &.openhistoricalmap-inspector-panel-slideshow-hidden {
                 display: none;
             }

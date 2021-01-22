@@ -1,4 +1,5 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ExtractSvgSpritePlugin = require('extract-svg-sprite-webpack-plugin');
 
 module.exports = {
     entry: './api.js',
@@ -17,6 +18,7 @@ module.exports = {
             path: __dirname + '/api/',
             filename: 'api.css',
         }),
+        new ExtractSvgSpritePlugin(),
     ],
     devtool: "nosources-source-map",
     devServer: {
@@ -48,6 +50,7 @@ module.exports = {
                         loader: MiniCssExtractPlugin.loader,
                     },
                     'css-loader',
+                    ExtractSvgSpritePlugin.cssLoader,
                     'sass-loader',
                 ],
             },
@@ -58,7 +61,15 @@ module.exports = {
                 ],
             },
             {
-                test: /\.(svg|gif|jpg|jpeg|png)$/,
+                test: /\.(svg)$/,
+                use : [
+                    {
+                        loader: ExtractSvgSpritePlugin.loader,
+                    },
+                ],
+            },
+            {
+                test: /\.(gif|jpg|jpeg|png)$/,
                 use : [
                     "ignore-loader",
                 ],
