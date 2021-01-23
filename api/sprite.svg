@@ -1,5 +1,0 @@
-<svg width="448" height="2068" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><symbol viewBox="0 0 448 1024" id="Octicons-chevron-left">
-  <path d="M448 320L320 192 0 512l320 320 128-128L256 512 448 320z" />
-</symbol><symbol viewBox="0 0 448 1024" id="Octicons-chevron-right">
-  <path d="M128 192L0 320l192 192L0 704l128 128 320-320L128 192z" />
-</symbol></defs><use width="448" height="1024" xlink:href="#Octicons-chevron-left" transform="translate(0, 0)" /><use width="448" height="1024" xlink:href="#Octicons-chevron-right" transform="translate(0, 1034)" /></svg>
