@@ -20,7 +20,6 @@
     "css-loader": "^3.2.0",
     "eslint": "^6.5.0",
     "eslint-loader": "^3.0.2",
-    "extract-svg-sprite-webpack-plugin": "^0.8.1",
     "file-loader": "^4.2.0",
     "ignore-loader": "^0.1.2",
     "mini-css-extract-plugin": "^0.8.0",
