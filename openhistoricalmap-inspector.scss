@@ -1,9 +1,8 @@
-$slideshow-slide-size: 325px;
+$slideshow-slide-size: 310px;
 
 
 div.openhistoricalmap-inspector-panel {
-    padding: 1em;
-    padding-top: 0;
+    padding: 0 1em;
 
     .openhistoricalmap-inspector-panel-paragraph {
         strong {
@@ -104,9 +103,8 @@ div.openhistoricalmap-inspector-panel {
             }
         }
     }
-}
 
-div.openhistoricalmap-inspector-footer {
-    margin-top: 1em;
-    padding: 1em;
+    hr:last-child {
+        margin-top: 1em;
+    }
 }
