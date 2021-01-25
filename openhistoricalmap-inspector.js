@@ -8,9 +8,6 @@ export class OpenHistoricaMapInspector {
         this.options = Object.assign({
             apiBaseUrl: "https://openhistoricalmap.org/api/",                   // the API URL and version to use
             apiVersion: "0.6",
-            classicDivSelector: '#sidebar_content div.browse-section',          // querySelector path to the "classic" inspector output, so we can interact with it, e.g. show/hide
-            classicFooterSelector: '#sidebar_content div.secondary-actions',    // querySelector path to the secondary actions footer with the Download XML and View History
-            classicTitleBar: '#sidebar_content > h2',                           // querySelector path to the title area of the inspector, which is not part of the inspector's readout panel
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -20,44 +17,21 @@ export class OpenHistoricaMapInspector {
         // step 2: sanity checks on those options, and/or defining other settings which derive frm those options
         // none at this time
 
-        // step 3: create our own DIV in the sidebar, then hide the classic panel
+        // step 3: create our own DIV in the sidebar
+        // and insert it into the DOM next to the classic OSM inspector panel
         // we won't actually have anything to show until selectFeature() is called
-        this.oldpanel = document.querySelector(this.options.classicDivSelector);
-        this.oldfooter = document.querySelector(this.options.classicFooterSelector);
-        this.classicTitleBar = document.querySelector(this.options.classicTitleBar);
+        const classicTitleBarSelector = '#sidebar_content > h2';                   // querySelector, title H2 of the OSM inspector
+        const classicContentSelector = '#sidebar_content div.browse-section';      // querySelector, "classic" OSM inspector output
+        const classicFooterSelector = '#sidebar_content div.secondary-actions';    // querySelector, secondary actions footer, Download XML and View History
+        
+        this.classicfooter = document.querySelector(classicFooterSelector);
+        this.classictitlebar = document.querySelector(classicTitleBarSelector);
+        this.classicpanel = document.querySelector(classicContentSelector);
 
-        this.initFooter();
-        this.initPanel();
-        this.hideClassicPanel();
-    }
-
-    initPanel () {
         this.mainpanel = document.createElement('DIV');
         this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
 
-        this.oldpanel.parentNode.insertBefore(this.mainpanel, this.oldpanel.nextSibling);
-    }
-
-    initFooter () {
-        this.footer = document.createElement('DIV');
-        this.footer.classList.add('openhistoricalmap-inspector-footer');
-        this.oldpanel.parentNode.insertBefore(this.footer, this.oldfooter.nextSibling);
-
-        this.footer.innerHTML = `
-            <a href="javascript:void(0);" data-link="openhistoricalmap-inspector-classicview">Switch to Classic Inspector</a>
-            <br/>
-            <a href="javascript:void(0);" data-link="openhistoricalmap-inspector-newinspector">Switch to OHM Inspector</a>
-            <br/>
-        `;
-        this.footer_classicviewbutton = this.footer.querySelector('a[data-link="openhistoricalmap-inspector-classicview"]');
-        this.footer_inspectorviewbutton = this.footer.querySelector('a[data-link="openhistoricalmap-inspector-newinspector"]');
-
-        this.footer_classicviewbutton.addEventListener('click', () => {
-            this.showClassicPanel();
-        });
-        this.footer_inspectorviewbutton.addEventListener('click', () => {
-            this.hideClassicPanel();
-        });
+        this.classictitlebar.parentNode.insertBefore(this.mainpanel, this.classictitlebar.nextSibling);
     }
 
     selectFeatureFromUrl () {
@@ -94,14 +68,12 @@ export class OpenHistoricaMapInspector {
     }
 
     renderNetworkError () {
-        this.classicTitleBar.innerHTML = 'Error';
-        this.footer.style.display = 'none';
+        this.classictitlebar.innerHTML = 'Error';
         this.mainpanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
-        this.classicTitleBar.innerHTML = 'Not Found';
-        this.footer.style.display = 'none';
+        this.classictitlebar.innerHTML = 'Not Found';
         this.mainpanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
     }
 
@@ -121,14 +93,16 @@ export class OpenHistoricaMapInspector {
     }
 
     renderFeatureDetails (type, id, xmldoc) {
-        // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.footer, this.mainpanel ]);
+        // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.mainpanel ]);
 
+        /*
         // titlebar: use the name tag and the <whatever>'s id attribute
         const titlebar = document.createElement('H2');
         titlebar.classList.add('openhistoricalmap-inspector-panel-title');
         const name = this.getTagValue(xmldoc, 'name');
         titlebar.textContent = name;
         this.mainpanel.appendChild(titlebar);
+        */
 
         // main body: first, any image:X tags forming a slideshow
         const slideshowimages = [];
@@ -227,7 +201,7 @@ export class OpenHistoricaMapInspector {
             selectSlide(selectedslide);
         }
 
-        // main body: then, a few hand-curated fields forming a table
+        // main body: a few hand-curated fields forming a table
         // mostly a repeated pattern: a DIV containing a strong for the field name and a span for the text value
         // but a few wrinkles such as resolving URL-shaped data (and a few not-so-URL-shaped) into hyperlinks
         const startdate = this.getTagValue(xmldoc, 'start_date');
@@ -335,6 +309,10 @@ export class OpenHistoricaMapInspector {
                 }
             }
         }
+
+        // main body: finish with a HR to visually separate the two inspectors' content
+        const endhr = document.createElement('HR');
+        this.mainpanel.appendChild(endhr);
     }
 
     getTagValue (xmldoc, tagname) {
@@ -345,30 +323,6 @@ export class OpenHistoricaMapInspector {
             if (keyword == tagname) return value;
         }
         return undefined;
-    }
-
-    showClassicPanel () {
-        // the pre-existinginspector output is in document.querySelector(classicDivSelector)
-        // goal here is to hide our own DIV and show that one
-        this.oldpanel.style.display = 'block';
-        this.oldfooter.style.display = 'block';
-        this.classicTitleBar.style.display = 'block';
-        this.mainpanel.style.display = 'none';
-
-        this.footer_classicviewbutton.style.display = 'none';
-        this.footer_inspectorviewbutton.style.display = 'inline';
-    }
-
-    hideClassicPanel () {
-        // the pre-existinginspector output is in document.querySelector(classicDivSelector)
-        // goal here is to hide that DIV and show our own
-        this.oldpanel.style.display = 'none';
-        this.oldfooter.style.display = 'none';
-        this.classicTitleBar.style.display = 'none';
-        this.mainpanel.style.display = 'block';
-
-        this.footer_classicviewbutton.style.display = 'inline';
-        this.footer_inspectorviewbutton.style.display = 'none';
     }
 
     parseWikipediaLink (url) {
