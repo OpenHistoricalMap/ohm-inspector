@@ -51,6 +51,9 @@ export class OpenHistoricaMapInspector {
             this.renderFeatureDetails(type, id, xmldoc);
             this.options.onFeatureLoaded.call(this, type, id, xmldoc);
         };
+        const notfound = () => {
+            this.options.onFeatureFail.call(this, type, id);
+        };
         const failure = () => {
             this.renderNetworkError();
             this.options.onFeatureFail.call(this, type, id);
@@ -59,13 +62,8 @@ export class OpenHistoricaMapInspector {
     }
 
     renderNetworkError () {
-        this.classictitlebar.innerHTML = 'Error';
-        this.mainpanel.innerHTML = "<p>Unable to contact the OHM server for additional inspector data. Please try again later.</p>";
-    }
-
-    renderNotFound (type, id) {
-        this.classictitlebar.innerHTML = 'Not Found';
-        this.mainpanel.innerHTML = `<p>No such feature: ${type} ${id}</p>`;
+        // this.classictitlebar.innerHTML = 'Error';
+        this.mainpanel.innerHTML = "<p>Unable to contact the OHM server for additional inspector details. Please try again later.</p>";
     }
 
     fetchXmlData (url, success, notfound, failure) {
