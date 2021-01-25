@@ -17,16 +17,11 @@ export class OpenHistoricaMapInspector {
         // step 2: sanity checks on those options, and/or defining other settings which derive frm those options
         // none at this time
 
-        // step 3: create our own DIV in the sidebar
-        // and insert it into the DOM next to the classic OSM inspector panel
+        // step 3: create our own DIV in the sidebar and insert it into the DOM next to the classic OSM inspector panel
         // we won't actually have anything to show until selectFeature() is called
-        const classicTitleBarSelector = '#sidebar_content > h2';                   // querySelector, title H2 of the OSM inspector
-        const classicContentSelector = '#sidebar_content div.browse-section';      // querySelector, "classic" OSM inspector output
-        const classicFooterSelector = '#sidebar_content div.secondary-actions';    // querySelector, secondary actions footer, Download XML and View History
-        
-        this.classicfooter = document.querySelector(classicFooterSelector);
-        this.classictitlebar = document.querySelector(classicTitleBarSelector);
-        this.classicpanel = document.querySelector(classicContentSelector);
+        this.classictitlebar = document.querySelector('#sidebar_content > h2');                 // title H2 of the OSM inspector
+        this.classicpanel = document.querySelector('#sidebar_content div.browse-section');      // classic OSM inspector output
+        this.classicfooter = document.querySelector('#sidebar_content div.secondary-actions');  // secondary actions footer, Download XML and View History
 
         this.mainpanel = document.createElement('DIV');
         this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
@@ -56,10 +51,6 @@ export class OpenHistoricaMapInspector {
             this.renderFeatureDetails(type, id, xmldoc);
             this.options.onFeatureLoaded.call(this, type, id, xmldoc);
         };
-        const notfound = () => {
-            this.renderNotFound(type, id);
-            this.options.onFeatureFail.call(this, type, id);
-        };
         const failure = () => {
             this.renderNetworkError();
             this.options.onFeatureFail.call(this, type, id);
@@ -69,7 +60,7 @@ export class OpenHistoricaMapInspector {
 
     renderNetworkError () {
         this.classictitlebar.innerHTML = 'Error';
-        this.mainpanel.innerHTML = "<p>Unable to contact the OHM server at this time. Please try again later.</p>";
+        this.mainpanel.innerHTML = "<p>Unable to contact the OHM server for additional inspector data. Please try again later.</p>";
     }
 
     renderNotFound (type, id) {
