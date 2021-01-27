@@ -199,8 +199,8 @@ export class OpenHistoricaMapInspector {
         const wikipedialink = this.findWikipediaLink(xmldoc);
 
         const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
-        const followedby_link = this.getTagValue(xmldoc, 'followed_by:source:name');
-        const followedby_source_text = this.getTagValue(xmldoc, 'followed_by');
+        const followedby_link = this.getTagValue(xmldoc, 'followed_by');
+        const followedby_source_text = this.getTagValue(xmldoc, 'followed_by:source:name');
         const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source');
 
         if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
