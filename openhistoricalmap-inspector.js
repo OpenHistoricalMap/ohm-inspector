@@ -195,8 +195,14 @@ export class OpenHistoricaMapInspector {
         // but a few wrinkles such as resolving URL-shaped data (and a few not-so-URL-shaped) into hyperlinks
         const startdate = this.getTagValue(xmldoc, 'start_date');
         const enddate = this.getTagValue(xmldoc, 'end_date');
-        const wikipedialink = this.getTagValue(xmldoc, 'wikipedia');
-        const followedby = this.getTagValue(xmldoc, 'followed_by');
+
+        const wikipedialink = this.findWikipediaLink(xmldoc);
+
+        const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
+        const followedby_link = this.getTagValue(xmldoc, 'followed_by');
+        const followedby_source_text = this.getTagValue(xmldoc, 'followed_by:source:name');
+        const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source');
+
         if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
 
         if (startdate && startdate != '-1000000-01-01') {
@@ -227,6 +233,54 @@ export class OpenHistoricaMapInspector {
 
             this.mainpanel.appendChild(htmldiv);
         }
+        if (followedby_text) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+            const b = document.createElement('STRONG');
+            b.textContent = 'Followed By: ';
+            htmldiv.appendChild(b);
+
+            // followedby may be a link or just plain text, depending on whether URL was given too
+            if (followedby_link) {
+                const f = document.createElement('SPAN');
+
+                const fl = document.createElement('A');
+                fl.textContent = followedby_text;
+                fl.target = '_blank';
+                fl.rel = 'nofollow';
+                fl.href = followedby_link;
+                f.appendChild(fl);
+
+                htmldiv.appendChild(f);
+            }
+            else {
+                const f = document.createElement('SPAN');
+                f.textContent = followedby_text;
+                htmldiv.appendChild(f);
+            }
+
+            // source may be a link or just plain text, depending on whether URL was given too
+            if (followedby_source_text && followedby_source_link) {
+                const f = document.createElement('SPAN');
+
+                const fl = document.createElement('A');
+                fl.textContent = ` [Source: ${followedby_source_text}]`;
+                fl.target = '_blank';
+                fl.rel = 'nofollow';
+                fl.href = followedby_source_link;
+                f.appendChild(fl);
+
+                htmldiv.appendChild(f);
+            }
+            else if (followedby_source_text) {
+                const f = document.createElement('SPAN');
+                f.textContent = ` [Source: ${followedby_source_text}]`;
+                htmldiv.appendChild(f);
+            }
+
+            this.mainpanel.appendChild(htmldiv);
+        }
         if (wikipedialink) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
@@ -244,7 +298,7 @@ export class OpenHistoricaMapInspector {
                 wtext.textContent = excerpt;
             });
 
-            htmldiv.appendChild(document.createTextNode( '\u00A0'));  // space
+            htmldiv.appendChild(document.createTextNode('\u00A0'));  // space
 
             // the hyperlink provided may be a URL and thus a simple hyperlink, or a xx:Something Wikipedia key
             // https://wiki.openstreetmap.org/wiki/Key:wikipedia
@@ -252,51 +306,10 @@ export class OpenHistoricaMapInspector {
             wlink.textContent = '(link)';
             wlink.target = '_blank';
             wlink.rel = 'nofollow';
-            wlink.href = this.convertWikipediaLink(wikipedialink);
+            wlink.href = wikipedialink;
             htmldiv.appendChild(wlink);
 
             this.mainpanel.appendChild(htmldiv);
-        }
-        if (followedby) {
-            const source = this.getTagValue(xmldoc, 'followed_by:source');
-
-            if (source && source.match(/^http/i)) {  // if source is a link, then this whole source readout is a hyperlink to that source
-                const htmldiv = document.createElement('DIV');
-                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
-
-                const b = document.createElement('STRONG');
-                b.textContent = 'Followed By: ';
-                htmldiv.appendChild(b);
-
-                const a = document.createElement('A');
-                a.href = source;
-                a.target = '_blank';
-                a.rel = 'nofollow';
-                a.textContent = followedby;
-                htmldiv.appendChild(a);
-
-                this.mainpanel.appendChild(htmldiv);
-            }
-            else {  // not a single-term hyperlink, so show the followed-by text and the source text
-                const htmldiv = document.createElement('DIV');
-                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
-
-                const b = document.createElement('STRONG');
-                b.textContent = 'Followed By: ';
-                htmldiv.appendChild(b);
-
-                const t = document.createElement('SPAN');
-                t.textContent = followedby;
-                htmldiv.appendChild(t);
-
-                this.mainpanel.appendChild(htmldiv);
-
-                if (source) {
-                    const s = document.createElement('SPAN');
-                    s.textContent = `. Source: ${source}`;
-                    htmldiv.appendChild(s);
-                }
-            }
         }
 
         // main body: finish with a HR to visually separate the two inspectors' content
@@ -314,11 +327,43 @@ export class OpenHistoricaMapInspector {
         return undefined;
     }
 
+    findWikipediaLink (xmldoc) {
+        // try to find a Wikipedia link, hand back XXX
+        // folks should use "wikipedia" as the key name, and supply either a complete URL or else a Wikipedia tag with language e.g. "en:Seattle Washington"
+        // but in the wild we're seeing "wikipedia:en" et al where a language is implied by the tag, not the value
+        // find whatever we can and return it, prefixing it with the implied language if any
+        let link, lang;
+        const tags = xmldoc.getElementsByTagName('tag');
+        for (var i = 0; i < tags.length; i++) {
+            const keyword = tags[i].getAttribute('k');
+            if (keyword == 'wikipedia') {
+                lang = 'en';
+                link = tags[i].getAttribute('v');
+                break;
+            }
+            else if (keyword.match(/^wikipedia:[a-zA-Z][a-zA-Z]$/)) {
+                lang = keyword.substr(-2).toLowerCase();
+                link = tags[i].getAttribute('v');
+                break;
+            }
+        }
+
+        if (link.toLowerCase().indexOf('http') === 0) {
+            return link;  // aready a fully-qualified URL, presumably to Wikipedia
+        }
+        else if (link && lang) {
+            return `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(link)}`;  // compose a fully-qualified URL to Wikipedia
+        }
+
+        return undefined;
+    }
+
     parseWikipediaLink (url) {
         // parse out both plain hyperlinks to a Wikipedia site, and Wikipedia OSM references
         // hand back a standardized structure for use with Wikipedia: links, excerpt queries, other language-websites, ...
-        const isplainlink = url.match(/^https?:\/\/(\w\w)\.wikipedia\.org\/wiki\/(\w+)#?(.*)$/i);
-        const iswikikey = url.match(/(\w\w):(\w+)#?(.*)$/);
+        const decurl = decodeURIComponent(url);
+        const isplainlink = decurl.match(/^https?:\/\/(\w\w)\.wikipedia\.org\/wiki\/([^#]+)#?(.*)$/i);
+        const iswikikey = decurl.match(/(\w\w):(\w+)#?(.*)$/);
 
         let lang, name, hash;
         if (isplainlink) {
@@ -354,14 +399,5 @@ export class OpenHistoricaMapInspector {
             callbackfunction(excerpt);
         };
         request.send();
-    }
-
-    convertWikipediaLink (url) {
-        const wurlbits = this.parseWikipediaLink(url);
-
-        let wurl = `https://${wurlbits.lang}.wikipedia.org/wiki/${wurlbits.name}`;
-        if (wurlbits.hash) wurl += `#${wurlbits.hash}`;
-
-        return wurl;
     }
 }

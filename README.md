@@ -83,9 +83,15 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
 
 The Inspector handles only specific tags and then turns 
 
-- titlebar: use the `name` tag and the `<whatever>`’s `id` attribute
-- main body: 
+- Titlebar: uses the `name` tag and the feature's `id` attribute
+- Image slideshow and captions:
   - any `image:X` tags form a slideshow, where the value is the URL of an image and X is an integer to allow n photos attached to this entity. Images should be stored on a public server (not personal filesharing services) and should not be hot-linked from other people's websites. We recommend contributing to and using images from WikiMedia Commons.
   - `start_date` and `end_date` as `YYYY-MM-DD`
-  - `wikipedia` if it has a valid Wikipedia URL or ID, pulls in an excerpt and links out to full entry
   - `followed_by` will show as a link if the value is a URL or as "**Source:** `text`" if it is not
+- Followed By
+  - `followed_by:name` briefly describes whatever came after this feature at this location; this will be displayed as-given to provide historical context
+  - `followed_by` is a URL for more information about what came next; if given, then the displayed name will be a hyperlink
+  - `followed_by:source:name` briefly describes the source for this Followed By information
+  - `followed_by:source` is a URL for that source; if given, then the displayed source name will be a hyperlink
+- Other sources and links
+  - `wikipedia` should be a Wikipedia entry's ID string (e.g. `Hotel_Seattle`) and is used to generate a link to Wikipedia (English `en`). This may also be `wikipedia:xx` where `xx` is a language code, e.g. `wikipedia:en` If this is used, then the generated link will be to the Wikipedia for that language.
