@@ -195,8 +195,14 @@ export class OpenHistoricaMapInspector {
         // but a few wrinkles such as resolving URL-shaped data (and a few not-so-URL-shaped) into hyperlinks
         const startdate = this.getTagValue(xmldoc, 'start_date');
         const enddate = this.getTagValue(xmldoc, 'end_date');
+
         const wikipedialink = this.findWikipediaLink(xmldoc);
-        const followedby = this.getTagValue(xmldoc, 'followed_by');
+
+        const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
+        const followedby_link = this.getTagValue(xmldoc, 'followed_by:source:name');
+        const followedby_source_text = this.getTagValue(xmldoc, 'followed_by');
+        const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source');
+
         if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
 
         if (startdate && startdate != '-1000000-01-01') {
@@ -227,46 +233,53 @@ export class OpenHistoricaMapInspector {
 
             this.mainpanel.appendChild(htmldiv);
         }
-        if (followedby) {
-            const source = this.getTagValue(xmldoc, 'followed_by:source');
+        if (followedby_text) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
 
-            if (source && source.match(/^http/i)) {  // if source is a link, then this whole source readout is a hyperlink to that source
-                const htmldiv = document.createElement('DIV');
-                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+            const b = document.createElement('STRONG');
+            b.textContent = 'Followed By: ';
+            htmldiv.appendChild(b);
 
-                const b = document.createElement('STRONG');
-                b.textContent = 'Followed By: ';
-                htmldiv.appendChild(b);
+            // followedby may be a link or just plain text, depending on whether URL was given too
+            if (followedby_link) {
+                const f = document.createElement('SPAN');
 
-                const a = document.createElement('A');
-                a.href = source;
-                a.target = '_blank';
-                a.rel = 'nofollow';
-                a.textContent = followedby;
-                htmldiv.appendChild(a);
+                const fl = document.createElement('A');
+                fl.textContent = followedby_text;
+                fl.target = '_blank';
+                fl.rel = 'nofollow';
+                fl.href = followedby_link;
+                f.appendChild(fl);
 
-                this.mainpanel.appendChild(htmldiv);
+                htmldiv.appendChild(f);
             }
-            else {  // not a single-term hyperlink, so show the followed-by text and the source text
-                const htmldiv = document.createElement('DIV');
-                htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
-
-                const b = document.createElement('STRONG');
-                b.textContent = 'Followed By: ';
-                htmldiv.appendChild(b);
-
-                const t = document.createElement('SPAN');
-                t.textContent = followedby;
-                htmldiv.appendChild(t);
-
-                this.mainpanel.appendChild(htmldiv);
-
-                if (source) {
-                    const s = document.createElement('SPAN');
-                    s.textContent = ` [source: ${source}]`;
-                    htmldiv.appendChild(s);
-                }
+            else {
+                const f = document.createElement('SPAN');
+                f.textContent = followedby_text;
+                htmldiv.appendChild(f);
             }
+
+            // source may be a link or just plain text, depending on whether URL was given too
+            if (followedby_source_text && followedby_source_link) {
+                const f = document.createElement('SPAN');
+
+                const fl = document.createElement('A');
+                fl.textContent = ` [Source: ${followedby_source_text}]`;
+                fl.target = '_blank';
+                fl.rel = 'nofollow';
+                fl.href = followedby_source_link;
+                f.appendChild(fl);
+
+                htmldiv.appendChild(f);
+            }
+            else if (followedby_source_text) {
+                const f = document.createElement('SPAN');
+                f.textContent = ` [Source: ${followedby_source_text}]`;
+                htmldiv.appendChild(f);
+            }
+
+            this.mainpanel.appendChild(htmldiv);
         }
         if (wikipedialink) {
             const htmldiv = document.createElement('DIV');
@@ -279,7 +292,6 @@ export class OpenHistoricaMapInspector {
             // pay attention, this gets weird: we need to use XHR to pull an excerpt from Wikipedia, which we will place into this line item
             // but of course we don't want to "lose our place" by waiting a second or three to resume writing out these line items...
             // place the line item now, with a target SPAN for the excerpt once we have it, and continue with the hyperlink and on to the next line item
-console.debug([ 'GDA WK=', wikipedialink ]);
             const wtext = document.createElement('SPAN');
             htmldiv.appendChild(wtext);
             this.getWikipediaExcerpt(wikipedialink, (excerpt) => {
