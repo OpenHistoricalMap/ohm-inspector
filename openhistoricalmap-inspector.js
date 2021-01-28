@@ -92,7 +92,7 @@ export class OpenHistoricaMapInspector {
         // start by collecting any image:x tag sets we find
         const slideshowimages = [];
         for (var imagei=1; imagei<=99; imagei++) {
-            const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
+            const imageurl = this.getTagValue(xmldoc, `image:${imagei}`, 'url');
             const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`);
             const imagedate = this.getTagValue(xmldoc, `image:${imagei}:date`);
             const sourcetext = this.getTagValue(xmldoc, `image:${imagei}:source`);
@@ -234,19 +234,19 @@ export class OpenHistoricaMapInspector {
         const name = this.getTagValue(xmldoc, 'name');
 
         const link_wikipedia = this.findWikipediaLink(xmldoc);
-        const link_libcongress = this.getTagValue(xmldoc, 'ref:LoC');
+        const link_libcongress = this.getTagValue(xmldoc, 'ref:LoC', 'url');
 
         const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
-        const followedby_link = this.getTagValue(xmldoc, 'followed_by');
+        const followedby_link = this.getTagValue(xmldoc, 'followed_by', 'url');
         const followedby_source_text = this.getTagValue(xmldoc, 'followed_by:source:name');
-        const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source');
+        const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source', 'url');
 
         let startdate_year = this.getTagValue(xmldoc, 'start_date');  // extract just a year, but -1000000 is "infinite"
         if (startdate_year && startdate_year.indexOf('-1000000') === 0) startdate_year = undefined;
         if (startdate_year) {  // split to just the year, but heed - at the start for BCE dates
             startdate_year = startdate_year.substr(0, 1) === '-' ? startdate_year.split('-')[1] : startdate_year.split('-')[0];
         }
-        const startdate_source_link = this.getTagValue(xmldoc, 'start_date:source');
+        const startdate_source_link = this.getTagValue(xmldoc, 'start_date:source', 'url');
         const startdate_source_text = this.getTagValue(xmldoc, 'start_date:source:name');
 
         let enddate_year = this.getTagValue(xmldoc, 'end_date');  // extract just a year, but 1000000 is "infinite"
@@ -254,7 +254,7 @@ export class OpenHistoricaMapInspector {
         if (enddate_year) {  // split to just the year, but heed - at the start for BCE dates
             enddate_year = enddate_year.substr(0, 1) === '-' ? enddate_year.split('-')[1] : enddate_year.split('-')[0];
         }
-        const enddate_source_link = this.getTagValue(xmldoc, 'end_date:source');
+        const enddate_source_link = this.getTagValue(xmldoc, 'end_date:source', 'url');
         const enddate_source_text = this.getTagValue(xmldoc, 'end_date:source:name');
 
         // title: the name tag
@@ -417,7 +417,7 @@ export class OpenHistoricaMapInspector {
         // start by collecting any more_info:x tag sets we find
         const moreinfolinks = [];
         for (var moreinfoi=1; moreinfoi<=99; moreinfoi++) {
-            const linkurl = this.getTagValue(xmldoc, `more_info:${moreinfoi}`);
+            const linkurl = this.getTagValue(xmldoc, `more_info:${moreinfoi}`, 'url');
             const linktext = this.getTagValue(xmldoc, `more_info:${moreinfoi}:name`) || '(link)';
             if (!linkurl) break;
 
@@ -490,15 +490,28 @@ export class OpenHistoricaMapInspector {
         this.mainpanel.appendChild(endhr);
     }
 
-    getTagValue (xmldoc, tagname) {
+    getTagValue (xmldoc, tagname, validation=undefined) {
         // fetch a <tag> element with the given k, returns its v
+        let foundvalue;
         const tags = xmldoc.getElementsByTagName('tag');
         for (var i = 0; i < tags.length; i++) {
             const keyword = tags[i].getAttribute('k');
             const value = tags[i].getAttribute('v');
-            if (keyword == tagname) return value;
+            if (keyword == tagname) {
+                foundvalue = value;
+                break;
+            }
         }
-        return undefined;
+
+        // postprocessing/validation on the found value, e.g. null it if it doesn't look like a real hyperlink
+        if (foundvalue && validation === 'url') {
+            const checkme = foundvalue.toLowerCase();
+            if (! checkme.match(/^http:/) && ! checkme.match(/^https:/) && ! checkme.match(/^ftp:/)) {
+                foundvalue = undefined;
+            }
+        }
+
+        return foundvalue;
     }
 
     setTagValue (xmldoc, tagname, tagvalue) {
