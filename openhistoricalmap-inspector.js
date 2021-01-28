@@ -48,6 +48,10 @@ export class OpenHistoricaMapInspector {
         if (this.options.debug) console.debug(`OpenHistoricaMapInspector selectFeature(${type}, ${id}) => ${url}`);
 
         const success = (xmldoc) => {
+            if (this.options.debug) {
+                this.addTestDataFieldsForDemonstration(xmldoc);
+            }
+
             this.renderFeatureDetails(type, id, xmldoc);
             this.options.onFeatureLoaded.call(this, type, id, xmldoc);
         };
@@ -84,28 +88,23 @@ export class OpenHistoricaMapInspector {
     renderFeatureDetails (type, id, xmldoc) {
         // console.debug([ 'renderFeatureDetails', type, id, xmldoc, this.mainpanel ]);
 
-        /*
-        // titlebar: use the name tag and the <whatever>'s id attribute
-        const titlebar = document.createElement('H2');
-        titlebar.classList.add('openhistoricalmap-inspector-panel-title');
-        const name = this.getTagValue(xmldoc, 'name');
-        titlebar.textContent = name;
-        this.mainpanel.appendChild(titlebar);
-        */
-
-        // main body: first, any image:X tags forming a slideshow
+        // top: slideshow formed from any image:X tags
+        // start by collecting any image:x tag sets we find
         const slideshowimages = [];
         for (var imagei=1; imagei<=99; imagei++) {
             const imageurl = this.getTagValue(xmldoc, `image:${imagei}`);
-            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`) || ' ';
-            const attribtext = this.getTagValue(xmldoc, `image:${imagei}:src_text`) || ' ';
-
+            const captiontext = this.getTagValue(xmldoc, `image:${imagei}:caption`);
+            const imagedate = this.getTagValue(xmldoc, `image:${imagei}:date`);
+            const sourcetext = this.getTagValue(xmldoc, `image:${imagei}:source`);
+            const licensetext = this.getTagValue(xmldoc, `image:${imagei}:license`);
             if (!imageurl) break;
 
             slideshowimages.push({
                 imageurl,
                 captiontext,
-                attribtext,
+                imagedate,
+                sourcetext,
+                licensetext,
             });
         }
         if (this.options.debug) console.debug([`renderFeatureDetails(type, id) images:` , slideshowimages]);
@@ -119,22 +118,61 @@ export class OpenHistoricaMapInspector {
                 <a class="openhistoricalmap-inspector-panel-slideshow-prevnext openhistoricalmap-inspector-panel-slideshow-next" href="javascript:void(0);"><span></span></a>
             `;
             slideshowimages.forEach((imageinfo, imagei) => {
+                // create the slide: a DIV containing a A and IMG
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
                 slide.setAttribute('data-slide-number', imagei);
                 slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" /></a>`;
 
-                if (imageinfo.captiontext) {
-                    const textbox = document.createElement('SPAN');
-                    textbox.classList.add('openhistoricalmap-inspector-panel-slideshow-caption');
-                    textbox.textContent = imageinfo.captiontext;
-                    slide.appendChild(textbox);
-                }
-                if (imageinfo.attribtext) {
-                    const textbox = document.createElement('SPAN');
-                    textbox.classList.add('openhistoricalmap-inspector-panel-slideshow-credits');
-                    textbox.textContent = imageinfo.attribtext;
-                    slide.appendChild(textbox);
+                // append a caption; a mix of caption text, attribution, etc. including an explicit link to the photo in case they don't think to click
+                if (imageinfo.captiontext || imageinfo.imagedate || imageinfo.sourcetext || imageinfo.licensetext) {
+                    const captionbox = document.createElement('SPAN');
+                    captionbox.classList.add('openhistoricalmap-inspector-panel-slideshow-caption');
+
+                    if (imageinfo.captiontext) {
+                        const cs = document.createElement('SPAN');
+                        cs.innerText = imageinfo.captiontext;
+                        captionbox.appendChild(cs);
+                    }
+
+                    if (imageinfo.imagedate || imageinfo.sourcetext || imageinfo.licensetext || imageinfo.imageurl) {
+                        const inparens = document.createElement('SPAN');
+                        inparens.appendChild(document.createTextNode('('));
+
+                        const phrases = [];
+                        if (imageinfo.imagedate) {
+                            const c = document.createElement('SPAN');
+                            c.innerText = imageinfo.imagedate.substr(0, 4);
+                            phrases.push(c);
+                        }
+                        if (imageinfo.sourcetext) {
+                            const c = document.createElement('SPAN');
+                            c.innerText = imageinfo.sourcetext;
+                            phrases.push(c);
+                        }
+                        if (imageinfo.licensetext) {
+                            const c = document.createElement('SPAN');
+                            c.innerText = imageinfo.licensetext;
+                            phrases.push(c);
+                        }
+                        if (imageinfo.imageurl) {
+                            const c = document.createElement('A');
+                            c.textContent = 'link';
+                            c.target = '_blank';
+                            c.rel = 'nofollow';
+                            c.href = imageinfo.imageurl;
+                            phrases.push(c);
+                        }
+                        for (var i=0, l=phrases.length; i<l; i++) {
+                            inparens.appendChild(phrases[i]);
+                            if (i < l - 1) inparens.appendChild(document.createTextNode(', '));
+                        }
+
+                        inparens.appendChild(document.createTextNode(')'));
+                        captionbox.appendChild(inparens);
+                    }
+
+                    slide.appendChild(captionbox);
                 }
 
                 htmldiv.appendChild(slide);
@@ -175,7 +213,7 @@ export class OpenHistoricaMapInspector {
 
             // add the SimpleLightbox behavior to the slideshow images
             // have to attach captions ourselves first, since it looks for title= or data-caption= on the A not a IMG under it
-            const slideshowimagelinks = htmldiv.querySelectorAll('div.openhistoricalmap-inspector-panel-slideshow-slide a');
+            const slideshowimagelinks = htmldiv.querySelectorAll('div.openhistoricalmap-inspector-panel-slideshow-slide > a');
             slideshowimagelinks.forEach(function (a) {
                 const img = a.querySelector('img');
                 const caption = img.title || '';
@@ -191,133 +229,269 @@ export class OpenHistoricaMapInspector {
         }
 
         // main body: a few hand-curated fields forming a table
-        // mostly a repeated pattern: a DIV containing a strong for the field name and a span for the text value
-        // but a few wrinkles such as resolving URL-shaped data (and a few not-so-URL-shaped) into hyperlinks
-        const startdate = this.getTagValue(xmldoc, 'start_date');
-        const enddate = this.getTagValue(xmldoc, 'end_date');
+        // start by collecting & standardizing fields & formats
 
-        const wikipedialink = this.findWikipediaLink(xmldoc);
+        const name = this.getTagValue(xmldoc, 'name');
+
+        const link_wikipedia = this.findWikipediaLink(xmldoc);
+        const link_libcongress = this.getTagValue(xmldoc, 'ref:LoC');
 
         const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
         const followedby_link = this.getTagValue(xmldoc, 'followed_by');
         const followedby_source_text = this.getTagValue(xmldoc, 'followed_by:source:name');
         const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source');
 
-        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) start/end date:`, startdate, enddate ]);
+        let startdate_year = this.getTagValue(xmldoc, 'start_date');  // extract just a year, but -1000000 is "infinite"
+        if (startdate_year && startdate_year.indexOf('-1000000') === 0) startdate_year = undefined;
+        if (startdate_year) {  // split to just the year, but heed - at the start for BCE dates
+            startdate_year = startdate_year.substr(0, 1) === '-' ? startdate_year.split('-')[1] : startdate_year.split('-')[0];
+        }
+        const startdate_source_link = this.getTagValue(xmldoc, 'start_date:source');
+        const startdate_source_text = this.getTagValue(xmldoc, 'start_date:source:name');
 
-        if (startdate && startdate != '-1000000-01-01') {
+        let enddate_year = this.getTagValue(xmldoc, 'end_date');  // extract just a year, but 1000000 is "infinite"
+        if (enddate_year && enddate_year.indexOf('1000000') === 0) enddate_year = undefined;
+        if (enddate_year) {  // split to just the year, but heed - at the start for BCE dates
+            enddate_year = enddate_year.substr(0, 1) === '-' ? enddate_year.split('-')[1] : enddate_year.split('-')[0];
+        }
+        const enddate_source_link = this.getTagValue(xmldoc, 'end_date:source');
+        const enddate_source_text = this.getTagValue(xmldoc, 'end_date:source:name');
+
+        // title: the name tag
+        if (name) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-strong');
+            htmldiv.textContent = name;
+            this.mainpanel.appendChild(htmldiv);
+        }
+
+        // start and end dates, potentially with source links
+        // either/both may/mayn't be present, so compose the two and display whatever ones we came up with
+        if (startdate_year || enddate_year) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
 
-            const b = document.createElement('STRONG');
-            b.textContent = 'Start Date: ';
-            htmldiv.appendChild(b);
+            let startspan;
+            if (startdate_year) {
+                startspan = document.createElement('SPAN');
+                startspan.appendChild(document.createTextNode(startdate_year));
 
-            const t = document.createElement('SPAN');
-            t.textContent = startdate;
-            htmldiv.appendChild(t);
+                if (startdate_source_text) {
+                    const f = document.createElement('SPAN');
+                    f.classList.add('openhistoricalmap-inspector-panel-small');
+                    const thetext = ` [Source: ${startdate_source_text}]`;
+
+                    if (startdate_source_link) {
+                        const fl = document.createElement('A');
+                        fl.textContent = thetext;
+                        fl.target = '_blank';
+                        fl.rel = 'nofollow';
+                        fl.href = startdate_source_link;
+                        f.appendChild(fl);
+                    }
+                    else {
+                        f.innerText = thetext;
+                    }
+
+                    startspan.appendChild(f);
+                }
+            }
+
+            let endspan;
+            if (enddate_year) {
+                endspan = document.createElement('SPAN');
+                endspan.appendChild(document.createTextNode(enddate_year));
+
+                if (enddate_source_text) {
+                    const f = document.createElement('SPAN');
+                    f.classList.add('openhistoricalmap-inspector-panel-small');
+                    const thetext = ` [Source: ${enddate_source_text}]`;
+
+                    if (enddate_source_link) {
+                        const fl = document.createElement('A');
+                        fl.textContent = thetext;
+                        fl.target = '_blank';
+                        fl.rel = 'nofollow';
+                        fl.href = enddate_source_link;
+                        f.appendChild(fl);
+                    }
+                    else {
+                        f.innerText = thetext;
+                    }
+
+                    endspan.appendChild(f);
+                }
+            }
+
+            if (startspan && endspan) {
+                htmldiv.appendChild(startspan);
+                htmldiv.appendChild(document.createTextNode(' - '));
+                htmldiv.appendChild(endspan);
+            }
+            else if (startspan) {
+                htmldiv.appendChild(document.createTextNode('Starting '));
+                htmldiv.appendChild(startspan);
+            }
+            else if (endspan) {
+                htmldiv.appendChild(document.createTextNode('Until '));
+                htmldiv.appendChild(endspan);
+            }
 
             this.mainpanel.appendChild(htmldiv);
         }
-        if (enddate && enddate != '1000000-01-01') {
+
+        // description: an excerpt from Wikipedia, if possible
+        // create the SPAN then async-load from Wikipedia... or not
+        if (link_wikipedia) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
 
-            const b = document.createElement('STRONG');
-            b.textContent = 'End Date: ';
-            htmldiv.appendChild(b);
-
-            const t = document.createElement('SPAN');
-            t.textContent = startdate;
-            htmldiv.appendChild(t);
+            const wtext = document.createElement('SPAN');
+            htmldiv.appendChild(wtext);
+            this.getWikipediaExcerpt(link_wikipedia, (excerpt) => {
+                wtext.textContent = excerpt;
+            });
 
             this.mainpanel.appendChild(htmldiv);
         }
+
+        // followed by: what came after this feature at the same place?
         if (followedby_text) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
 
-            const b = document.createElement('STRONG');
+            const b = document.createElement('SPAN');
             b.textContent = 'Followed By: ';
             htmldiv.appendChild(b);
 
             // followedby may be a link or just plain text, depending on whether URL was given too
-            if (followedby_link) {
-                const f = document.createElement('SPAN');
+            const f = document.createElement('SPAN');
+            const thetext = followedby_text;
 
+            if (followedby_link) {
                 const fl = document.createElement('A');
-                fl.textContent = followedby_text;
+                fl.textContent = thetext;
                 fl.target = '_blank';
                 fl.rel = 'nofollow';
                 fl.href = followedby_link;
                 f.appendChild(fl);
-
-                htmldiv.appendChild(f);
             }
             else {
-                const f = document.createElement('SPAN');
-                f.textContent = followedby_text;
-                htmldiv.appendChild(f);
+                f.textContent = thetext;
             }
 
-            // source may be a link or just plain text, depending on whether URL was given too
-            if (followedby_source_text && followedby_source_link) {
-                const f = document.createElement('SPAN');
+            htmldiv.appendChild(f);
 
-                const fl = document.createElement('A');
-                fl.textContent = ` [Source: ${followedby_source_text}]`;
-                fl.target = '_blank';
-                fl.rel = 'nofollow';
-                fl.href = followedby_source_link;
-                f.appendChild(fl);
+            // source may be a link or just plain text, depending on whether URL was given too
+            if (followedby_source_text) {
+                const f = document.createElement('SPAN');
+                f.classList.add('openhistoricalmap-inspector-panel-small');
+                const thetext = ` [Source: ${followedby_source_text}]`;
+
+                if (followedby_source_link) {
+                    const fl = document.createElement('A');
+                    fl.textContent = thetext;
+                    fl.target = '_blank';
+                    fl.rel = 'nofollow';
+                    fl.href = followedby_source_link;
+                    f.appendChild(fl);
+                }
+                else {
+                    f.textContent = thetext;
+                }
 
                 htmldiv.appendChild(f);
             }
             else if (followedby_source_text) {
                 const f = document.createElement('SPAN');
+                f.classList.add('openhistoricalmap-inspector-panel-small');
                 f.textContent = ` [Source: ${followedby_source_text}]`;
                 htmldiv.appendChild(f);
             }
 
             this.mainpanel.appendChild(htmldiv);
         }
-        if (wikipedialink) {
+
+        // more info: zero-or-more more_info:x sets
+        // start by collecting any more_info:x tag sets we find
+        const moreinfolinks = [];
+        for (var moreinfoi=1; moreinfoi<=99; moreinfoi++) {
+            const linkurl = this.getTagValue(xmldoc, `more_info:${moreinfoi}`);
+            const linktext = this.getTagValue(xmldoc, `more_info:${moreinfoi}:name`) || '(link)';
+            if (!linkurl) break;
+
+            moreinfolinks.push({
+                linkurl,
+                linktext,
+            });
+        }
+        if (this.options.debug) console.debug([`renderFeatureDetails(type, id) moreinfo:` , moreinfolinks]);
+
+        if (moreinfolinks.length) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-moreinfo');
 
-            const b = document.createElement('STRONG');
-            b.textContent = 'Wikipedia: ';
+            const b = document.createElement('SPAN');
+            b.textContent = 'More info: ';
             htmldiv.appendChild(b);
 
-            // pay attention, this gets weird: we need to use XHR to pull an excerpt from Wikipedia, which we will place into this line item
-            // but of course we don't want to "lose our place" by waiting a second or three to resume writing out these line items...
-            // place the line item now, with a target SPAN for the excerpt once we have it, and continue with the hyperlink and on to the next line item
-            const wtext = document.createElement('SPAN');
-            htmldiv.appendChild(wtext);
-            this.getWikipediaExcerpt(wikipedialink, (excerpt) => {
-                wtext.textContent = excerpt;
+            const listing = document.createElement('UL');
+            moreinfolinks.forEach(function (milink) {
+                const li = document.createElement('LI');
+                const a = document.createElement('A');
+                a.textContent = milink.linktext;
+                a.href = milink.linkurl;
+                a.target = '_blank';
+                a.rel = 'nofollow';
+                li.appendChild(a);
+                listing.appendChild(li);
             });
-
-            htmldiv.appendChild(document.createTextNode('\u00A0'));  // space
-
-            // the hyperlink provided may be a URL and thus a simple hyperlink, or a xx:Something Wikipedia key
-            // https://wiki.openstreetmap.org/wiki/Key:wikipedia
-            const wlink = document.createElement('A');
-            wlink.textContent = '(link)';
-            wlink.target = '_blank';
-            wlink.rel = 'nofollow';
-            wlink.href = wikipedialink;
-            htmldiv.appendChild(wlink);
+            htmldiv.appendChild(listing);
 
             this.mainpanel.appendChild(htmldiv);
         }
 
-        // main body: finish with a HR to visually separate the two inspectors' content
+        // bottom links, single-word links, one line, with spacers
+        if (link_wikipedia) {
+            const htmldiv = document.createElement('DIV');
+            htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
+
+            const links = [];
+
+            if (link_wikipedia) {
+                const link = document.createElement('A');
+                link.textContent = 'Wikipedia';
+                link.target = '_blank';
+                link.rel = 'nofollow';
+                link.href = link_wikipedia;
+                links.push(link);
+            }
+            if (link_libcongress) {
+                const link = document.createElement('A');
+                link.textContent = 'US LoC';
+                link.target = '_blank';
+                link.rel = 'nofollow';
+                link.href = link_libcongress;
+                links.push(link);
+            }
+
+            for (var i=0, l=links.length; i<l; i++) {
+                htmldiv.appendChild(links[i]);
+                if (i < l - 1) htmldiv.appendChild(document.createTextNode(' | '));  // separator, unless last one
+            }
+
+            this.mainpanel.appendChild(htmldiv);
+        }
+
+        // bottom: finish with a HR to visually separate the two inspectors' content
         const endhr = document.createElement('HR');
         this.mainpanel.appendChild(endhr);
     }
 
     getTagValue (xmldoc, tagname) {
+        // fetch a <tag> element with the given k, returns its v
         const tags = xmldoc.getElementsByTagName('tag');
         for (var i = 0; i < tags.length; i++) {
             const keyword = tags[i].getAttribute('k');
@@ -325,6 +499,27 @@ export class OpenHistoricaMapInspector {
             if (keyword == tagname) return value;
         }
         return undefined;
+    }
+
+    setTagValue (xmldoc, tagname, tagvalue) {
+        // this sets a <tag> element so we can set fields that are missing/blank
+        // for experimental debugging with new tags that aren't in fact in the OHM/OSM data
+        // see also addTestDataFieldsForDemonstration()
+
+        // find & delete any pre-existing tag with this k
+        const tags = xmldoc.getElementsByTagName('tag');
+        for (var i = tags.length - 1; i >= 0; i--) {
+            const tag = tags[i];
+            const keyword = tag.getAttribute('k');
+            if (keyword == tagname) tag.parentNode.removeChild(tag);
+        }
+
+        // add the new one
+        const xmlroot = xmldoc.getElementsByTagName('osm')[0];
+        const newtag = xmldoc.createElement('tag');
+        newtag.setAttribute('k', tagname);
+        newtag.setAttribute('v', tagvalue);
+        xmlroot.appendChild(newtag);
     }
 
     findWikipediaLink (xmldoc) {
@@ -399,5 +594,35 @@ export class OpenHistoricaMapInspector {
             callbackfunction(excerpt);
         };
         request.send();
+    }
+
+    addTestDataFieldsForDemonstration (xmldoc) {  // eslint-disable-line no-unused-vars
+        // a hack to add missing data fields into the XML document,
+        // so we can test the panel with new tags, without needing features to have these new tags
+        // outside of active development, this should be commented out but test for localhost as a failsafe
+        if (document.location.hostname !== 'localhost') return;
+        /*
+        console.error('Warning: XML feature info will be passed through addTestDataFieldsForDemonstration() to falsify some data for display into the panel.');
+
+        this.setTagValue(xmldoc, 'image:1:source', "Seattle Library");
+
+        this.setTagValue(xmldoc, 'wikipedia:en', "Hotel_Seattle");
+
+        this.setTagValue(xmldoc, 'followed_by:name', "Eternal Void");
+        this.setTagValue(xmldoc, 'followed_by', "https://www.google.com/");
+        this.setTagValue(xmldoc, 'followed_by:source:name', "Wackypedio");
+        this.setTagValue(xmldoc, 'followed_by:source', "https://www.example.com/");
+
+        this.setTagValue(xmldoc, 'start_date:source', "https://www.google.com/");
+        this.setTagValue(xmldoc, 'start_date:source:name', "Bob Smith, Historian");
+
+        this.setTagValue(xmldoc, 'end_date:source', "https://wikipedia.com/");
+        this.setTagValue(xmldoc, 'end_date:source:name', "Wikipedia");
+
+        this.setTagValue(xmldoc, 'more_info:1', "https://www.google.com/search?q=occidental+hotel+seattle");
+        this.setTagValue(xmldoc, 'more_info:1:name', "Search Google");
+        this.setTagValue(xmldoc, 'more_info:2', "https://www.bing.com/search?q=occidental+hotel+seattle");
+        this.setTagValue(xmldoc, 'more_info:2:name', "Search Bing");
+        */
     }
 }

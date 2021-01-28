@@ -84,14 +84,28 @@ You may test this functionality in an existing OSM/OHM browser window by pasting
 The Inspector handles only specific tags and then turns 
 
 - Titlebar: uses the `name` tag and the feature's `id` attribute
+- Start and End dates
+  - `start_date` and `end_date` should both be a date in **YYYY-MM-DD** ISO format, or at least a year
+    - negative numbers may be used for B.C.E. dates e.g. `-1500`
+  - `start_date:source:name` and `end_date:source:name` are text, used to add a source to the start/end dates when displayed
+    - `start_date:source` and `end_date:source` are URLs; if given, then the corresponding source display will be a hyperlink
 - Image slideshow and captions:
-  - any `image:X` tags form a slideshow, where the value is the URL of an image and X is an integer to allow n photos attached to this entity. Images should be stored on a public server (not personal filesharing services) and should not be hot-linked from other people's websites. We recommend contributing to and using images from WikiMedia Commons.
-  - `start_date` and `end_date` as `YYYY-MM-DD`
-  - `followed_by` will show as a link if the value is a URL or as "**Source:** `text`" if it is not
+  - `image:X` tags form a series of images which will be displayed as a slideshow; X is an 1 through 99
+    - `image:x` is the URL of the image
+    - `image:x:caption` is brief text (a few words) describing the image
+    - `image:x:date` is a date for the image, in **YYYY-MM-DD** format
+    - `image:x:source` is brief text (a few words) describing the source
+    - `image:x:license` is brief text (a few words) describing the usage license
+  - Images should be stored on a public server (not personal filesharing services) and should not be hot-linked from other people's websites.
+  - We recommend contributing to and using images from WikiMedia Commons.
 - Followed By
-  - `followed_by:name` briefly describes whatever came after this feature at this location; this will be displayed as-given to provide historical context
-  - `followed_by` is a URL for more information about what came next; if given, then the displayed name will be a hyperlink
-  - `followed_by:source:name` briefly describes the source for this Followed By information
+  - `followed_by:name` is a few words naming whatever came after this feature at this location; this will be displayed as-given to provide historical context
+  - `followed_by` is a URL; if given, then the displayed name will be a hyperlink
+  - `followed_by:source:name` is a few words (e.g. website name) describing the source for this Followed By information
   - `followed_by:source` is a URL for that source; if given, then the displayed source name will be a hyperlink
 - Other sources and links
   - `wikipedia` should be a Wikipedia entry's ID string (e.g. `Hotel_Seattle`) and is used to generate a link to Wikipedia (English `en`). This may also be `wikipedia:xx` where `xx` is a language code, e.g. `wikipedia:en` If this is used, then the generated link will be to the Wikipedia for that language.
+  - `ref:LoC` is the URL to a page at the US Library of Congress
+  - `more_info:X` form a series of More Info entries which will be presented as a list of hyperlinks; X is an integer 1 through 99
+    - `more_info:x` is the URL for this link
+    - `more_info:x:name` is a few words to be shown for this link

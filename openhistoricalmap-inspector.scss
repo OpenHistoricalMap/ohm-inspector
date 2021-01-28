@@ -2,21 +2,31 @@ $slideshow-slide-size: 310px;
 
 
 div.openhistoricalmap-inspector-panel {
+    /* padding to match edges */
     padding: 0 1em;
 
+    /* general font size and paragraph settings */
+    font-size: 13px;
+    line-height: 1.25;
+
     .openhistoricalmap-inspector-panel-paragraph {
-        strong {
-        }
-        span {
-        }
-        a {
+        margin-bottom: 1em;
+        &.openhistoricalmap-inspector-panel-paragraph-nomargin {
+            margin-bottom: 0;
         }
     }
 
-    h2.openhistoricalmap-inspector-panel-title {
-        padding: 20px 20px 10px 0;
+    a {
     }
 
+    .openhistoricalmap-inspector-panel-small {
+        font-size: 80%;
+    }
+    .openhistoricalmap-inspector-panel-strong {
+        font-weight: bold;
+    }
+
+    /* the images form a slideshow and have a lightbox behavior */
     .openhistoricalmap-inspector-panel-slideshow {
         position: relative;
 
@@ -90,20 +100,19 @@ div.openhistoricalmap-inspector-panel {
             span.openhistoricalmap-inspector-panel-slideshow-caption {
                 display: block;
                 text-align: center;
-
-                font-size: 80%;
-            }
-
-            span.openhistoricalmap-inspector-panel-slideshow-credits {
-                display: block;
-                text-align: center;
-
-                font-size: 80%;
                 font-style: italic;
             }
         }
     }
 
+    /* moreinfo is a paragraph, with a list of links and a dead simple left-right grid */
+    .openhistoricalmap-inspector-panel-moreinfo {
+        display: flex;
+        > span { flex: 1; }
+        ul { flex: 3; }
+    }
+
+    /* at the end */
     hr:last-child {
         margin-top: 1em;
     }
