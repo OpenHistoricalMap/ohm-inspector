@@ -104,7 +104,10 @@ The Inspector handles only specific tags and then turns
   - `followed_by:source:name` is a few words (e.g. website name) describing the source for this Followed By information
   - `followed_by:source` is a URL for that source; if given, then the displayed source name will be a hyperlink
 - Other sources and links
-  - `wikipedia` should be a Wikipedia entry's ID string (e.g. `Hotel_Seattle`) and is used to generate a link to Wikipedia (English `en`). This may also be `wikipedia:xx` where `xx` is a language code, e.g. `wikipedia:en` If this is used, then the generated link will be to the Wikipedia for that language.
+  - `wikipedia` should be a Wikipedia entry's ID string (e.g. `Hotel_Seattle`) and is used to generate a link to Wikipedia (English `en`).
+    - This may also be `wikipedia:xx` where `xx` is a language code, e.g. `wikipedia:en` If this is used, then the generated link will be to the Wikipedia for that language.
+    - Only the first Wikipedia tag found will be used.
+  - `wikidata` is the ID tag of a page at Wikidata
   - `ref:LoC` is the URL to a page at the US Library of Congress
   - `more_info:X` form a series of More Info entries which will be presented as a list of hyperlinks; X is an integer 1 through 99
     - `more_info:x` is the URL for this link
