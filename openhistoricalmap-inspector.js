@@ -234,6 +234,7 @@ export class OpenHistoricaMapInspector {
         const name = this.getTagValue(xmldoc, 'name');
 
         const link_wikipedia = this.findWikipediaLink(xmldoc);
+        const link_wikidata = this.findWikidataLink(xmldoc);
         const link_libcongress = this.getTagValue(xmldoc, 'ref:LoC', 'url');
 
         const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
@@ -468,6 +469,14 @@ export class OpenHistoricaMapInspector {
                 link.href = link_wikipedia;
                 links.push(link);
             }
+            if (link_wikidata) {
+                const link = document.createElement('A');
+                link.textContent = 'Wikidata';
+                link.target = '_blank';
+                link.rel = 'nofollow';
+                link.href = link_wikidata;
+                links.push(link);
+            }
             if (link_libcongress) {
                 const link = document.createElement('A');
                 link.textContent = 'US LoC';
@@ -556,7 +565,7 @@ export class OpenHistoricaMapInspector {
             }
         }
 
-        if (link.toLowerCase().indexOf('http') === 0) {
+        if (link && link.toLowerCase().indexOf('http') === 0) {
             return link;  // aready a fully-qualified URL, presumably to Wikipedia
         }
         else if (link && lang) {
@@ -607,6 +616,12 @@ export class OpenHistoricaMapInspector {
             callbackfunction(excerpt);
         };
         request.send();
+    }
+
+    findWikidataLink (xmldoc) {
+        const wdid = this.getTagValue(xmldoc, 'wikidata');
+        if (! wdid) return undefined;
+        return `https://www.wikidata.org/wiki/${wdid}`;
     }
 
     addTestDataFieldsForDemonstration (xmldoc) {  // eslint-disable-line no-unused-vars
