@@ -12,7 +12,7 @@ div.openhistoricalmap-inspector-panel {
     .openhistoricalmap-inspector-panel-paragraph {
         margin-bottom: 1em;
         &.openhistoricalmap-inspector-panel-paragraph-nomargin {
-            margin-bottom: 0;
+            margin-bottom: 0.5em;
         }
     }
 
@@ -44,7 +44,7 @@ div.openhistoricalmap-inspector-panel {
             display: inline-block;  /* the link itself: white circle, fixed size, positioned */
             width: 40px;
             height: 40px;
-            background-color: white !important;
+            background-color: rgba(255,255,255,0.6) !important;
             border-radius: 50%;
 
             span {  /* the arrow images: span with background image */
@@ -99,7 +99,7 @@ div.openhistoricalmap-inspector-panel {
 
             span.openhistoricalmap-inspector-panel-slideshow-caption {
                 display: block;
-                text-align: center;
+                text-align: left;
                 font-style: italic;
             }
         }
