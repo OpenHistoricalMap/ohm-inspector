@@ -122,7 +122,7 @@ export class OpenHistoricaMapInspector {
                 const slide = document.createElement('DIV');
                 slide.classList.add('openhistoricalmap-inspector-panel-slideshow-slide');
                 slide.setAttribute('data-slide-number', imagei);
-                slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext}" /></a>`;
+                slide.innerHTML = `<a href="${imageinfo.imageurl}" target="_blank"><img src="${imageinfo.imageurl}" title="${imageinfo.captiontext || ''}" /></a>`;
 
                 // append a caption; a mix of caption text, attribution, etc. including an explicit link to the photo in case they don't think to click
                 if (imageinfo.captiontext || imageinfo.imagedate || imageinfo.sourcetext || imageinfo.licensetext) {
