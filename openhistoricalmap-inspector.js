@@ -19,7 +19,7 @@ export class OpenHistoricaMapInspector {
 
         // step 3: create our own DIV in the sidebar and insert it into the DOM next to the classic OSM inspector panel
         // we won't actually have anything to show until selectFeature() is called
-        this.classictitlebar = document.querySelector('#sidebar_content > h2');                 // title H2 of the OSM inspector
+        this.classictitlebar = document.querySelector('#sidebar_content h2');                   // title H2 of the OSM inspector
         this.classicpanel = document.querySelector('#sidebar_content div.browse-section');      // classic OSM inspector output
         this.classicfooter = document.querySelector('#sidebar_content div.secondary-actions');  // secondary actions footer, Download XML and View History
 
