@@ -17,16 +17,38 @@ export class OpenHistoricaMapInspector {
         // step 2: sanity checks on those options, and/or defining other settings which derive frm those options
         // none at this time
 
-        // step 3: create our own DIV in the sidebar and insert it into the DOM next to the classic OSM inspector panel
-        // we won't actually have anything to show until selectFeature() is called
+        // step 3: create our own DIV in the sidebar, inject into the DOM for the sidebar
+        // Feb 2023, we need to support both the near-future OHM which shuffled the sidebar a bit AND the old/current OHM ("oldmethod")
+        // hopefully after this rolls out we can remove this "polyfill"
+        this.mainpanel = document.createElement('DIV');
+        this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
+
         this.classictitlebar = document.querySelector('#sidebar_content h2');                   // title H2 of the OSM inspector
         this.classicpanel = document.querySelector('#sidebar_content div.browse-section');      // classic OSM inspector output
         this.classicfooter = document.querySelector('#sidebar_content div.secondary-actions');  // secondary actions footer, Download XML and View History
 
-        this.mainpanel = document.createElement('DIV');
-        this.mainpanel.classList.add('openhistoricalmap-inspector-panel');
+        const oldmethod = ! this.classictitlebar.classList.contains('text-break');
+        if (oldmethod) {
+console.debug("OpenHistoricaMapInspector old injection method");
+            this.classictitlebar.parentNode.insertBefore(this.mainpanel, this.classictitlebar.nextSibling);
+        } else {
+console.debug("OpenHistoricaMapInspector new injection method");
+            // injection Feb 2023, per new OSM upstream
+            // create a DIV and give it the classes from the H2
+            // then add the H2, the Pnspector panel, and the button DIV after the H2, in that order
+            this.wrapper = document.createElement('DIV');
+            this.wrapper.className = 'flex-grow-1 text-break';
 
-        this.classictitlebar.parentNode.insertBefore(this.mainpanel, this.classictitlebar.nextSibling);
+            this.classictitlebar.parentNode.insertBefore(this.wrapper, this.classictitlebar);
+
+            this.classictitlebar.className = '';
+
+            this.closebutton = this.classictitlebar.nextSibling;
+
+            this.wrapper.appendChild(this.classictitlebar);
+            this.wrapper.appendChild(this.mainpanel);
+            this.wrapper.appendChild(this.closebutton);
+        }
     }
 
     selectFeatureFromUrl () {
