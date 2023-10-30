@@ -6,8 +6,8 @@ export class OpenHistoricaMapInspector {
     constructor (options) {
         // step 1: load default options, merging their passed-in without these defaults
         this.options = Object.assign({
-            apiBaseUrl: "https://openhistoricalmap.org/api/",                   // the API URL and version to use
-            apiVersion: "0.6",
+            apiBaseUrl: "https://openhistoricalmap.org/api",                    // the API URL to use; no trailing /
+            apiVersion: "0.6",                                                  // the API version to use; no trailing /
             onFeatureLoaded: function () {},                                    // give the caller more power, by passing them a copy of features that we load
             onFeatureFail: function () {},                                      // let the caller do something when selectFeature() fails, e.g. feature not found
             debug: false,                                                       // debugging output, mostly useful to developers of this utility
@@ -29,10 +29,10 @@ export class OpenHistoricaMapInspector {
 
         const oldmethod = ! this.classictitlebar.classList.contains('text-break');
         if (oldmethod) {
-console.debug("OpenHistoricaMapInspector old injection method");
+            console.debug("OpenHistoricaMapInspector old injection method");
             this.classictitlebar.parentNode.insertBefore(this.mainpanel, this.classictitlebar.nextSibling);
         } else {
-console.debug("OpenHistoricaMapInspector new injection method");
+            console.debug("OpenHistoricaMapInspector new injection method");
             // injection Feb 2023, per new OSM upstream
             // create a DIV and give it the classes from the H2
             // then add the H2, the Pnspector panel, and the button DIV after the H2, in that order
