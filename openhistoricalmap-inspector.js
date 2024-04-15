@@ -259,26 +259,50 @@ export class OpenHistoricaMapInspector {
         const link_wikidata = this.findWikidataLink(xmldoc);
         const link_libcongress = this.getTagValue(xmldoc, 'ref:LoC', 'url');
 
+        const startdate_source_link = this.getTagValue(xmldoc, 'start_date:source', 'url');
+        const startdate_source_text = this.getTagValue(xmldoc, 'start_date:source:name');
+        const enddate_source_link = this.getTagValue(xmldoc, 'end_date:source', 'url');
+        const enddate_source_text = this.getTagValue(xmldoc, 'end_date:source:name');
+
         const followedby_text = this.getTagValue(xmldoc, 'followed_by:name');
         const followedby_link = this.getTagValue(xmldoc, 'followed_by', 'url');
         const followedby_source_text = this.getTagValue(xmldoc, 'followed_by:source:name');
         const followedby_source_link = this.getTagValue(xmldoc, 'followed_by:source', 'url');
 
-        let startdate_year = this.getTagValue(xmldoc, 'start_date');  // extract just a year, but -1000000 is "infinite"
-        if (startdate_year && startdate_year.indexOf('-1000000') === 0) startdate_year = undefined;
-        if (startdate_year) {  // split to just the year, but heed - at the start for BCE dates
-            startdate_year = startdate_year.substr(0, 1) === '-' ? startdate_year.split('-')[1] : startdate_year.split('-')[0];
-        }
-        const startdate_source_link = this.getTagValue(xmldoc, 'start_date:source', 'url');
-        const startdate_source_text = this.getTagValue(xmldoc, 'start_date:source:name');
+        // start and end range, just years
+        // note that 1000000 and -1000000 are effectively null dates same as if they were '' or undefined
+        let daterangestring;
+        {
+            // get the startdate & enddate, swap to Date objects
+            let startdate = this.getTagValue(xmldoc, 'start_date');
+            let enddate = this.getTagValue(xmldoc, 'end_date');
 
-        let enddate_year = this.getTagValue(xmldoc, 'end_date');  // extract just a year, but 1000000 is "infinite"
-        if (enddate_year && enddate_year.indexOf('1000000') === 0) enddate_year = undefined;
-        if (enddate_year) {  // split to just the year, but heed - at the start for BCE dates
-            enddate_year = enddate_year.substr(0, 1) === '-' ? enddate_year.split('-')[1] : enddate_year.split('-')[0];
+            const startyear = parseInt(startdate);
+            const endyear = parseInt(enddate);
+
+            if (startdate && startdate.indexOf('-1000000') !== 0) {
+                startdate = new Date(Date.UTC(2000, 0, 1, 0, 0, 0, 0));
+                startdate.setFullYear(startyear);
+            }
+            if (enddate && enddate.indexOf('1000000') !== 0) {
+                enddate = new Date(Date.UTC(2000, 0, 1, 0, 0, 0, 0));
+                enddate.setFullYear(endyear);
+            }
+
+            if (startdate && enddate) {
+                const opts = {year: 'numeric'};
+                if (startyear < 1 || endyear < 1) opts.era = 'short';
+                daterangestring = new Intl.DateTimeFormat(navigator.languages, opts).formatRange(startdate, enddate);
+            } else if (startdate) {
+                const opts = {year: 'numeric'};
+                if (startyear < 1) opts.era = 'short';
+                daterangestring = new Intl.DateTimeFormat(navigator.languages, opts).format(startdate) + ' - ';
+            } else if (enddate) {
+                const opts = {year: 'numeric'};
+                if (endyear < 1) opts.era = 'short';
+                daterangestring = ' - ' + new Intl.DateTimeFormat(navigator.languages, opts).format(enddate);
+            }
         }
-        const enddate_source_link = this.getTagValue(xmldoc, 'end_date:source', 'url');
-        const enddate_source_text = this.getTagValue(xmldoc, 'end_date:source:name');
 
         // title: the name tag
         if (name) {
@@ -289,78 +313,10 @@ export class OpenHistoricaMapInspector {
             this.mainpanel.appendChild(htmldiv);
         }
 
-        // start and end dates, potentially with source links
-        // either/both may/mayn't be present, so compose the two and display whatever ones we came up with
-        if (startdate_year || enddate_year) {
+        if (daterangestring) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
-
-            let startspan;
-            if (startdate_year) {
-                startspan = document.createElement('SPAN');
-                startspan.appendChild(document.createTextNode(startdate_year));
-
-                if (startdate_source_text) {
-                    const f = document.createElement('SPAN');
-                    f.classList.add('openhistoricalmap-inspector-panel-small');
-                    const thetext = ` [Source: ${startdate_source_text}]`;
-
-                    if (startdate_source_link) {
-                        const fl = document.createElement('A');
-                        fl.textContent = thetext;
-                        fl.target = '_blank';
-                        fl.rel = 'nofollow';
-                        fl.href = startdate_source_link;
-                        f.appendChild(fl);
-                    }
-                    else {
-                        f.innerText = thetext;
-                    }
-
-                    startspan.appendChild(f);
-                }
-            }
-
-            let endspan;
-            if (enddate_year) {
-                endspan = document.createElement('SPAN');
-                endspan.appendChild(document.createTextNode(enddate_year));
-
-                if (enddate_source_text) {
-                    const f = document.createElement('SPAN');
-                    f.classList.add('openhistoricalmap-inspector-panel-small');
-                    const thetext = ` [Source: ${enddate_source_text}]`;
-
-                    if (enddate_source_link) {
-                        const fl = document.createElement('A');
-                        fl.textContent = thetext;
-                        fl.target = '_blank';
-                        fl.rel = 'nofollow';
-                        fl.href = enddate_source_link;
-                        f.appendChild(fl);
-                    }
-                    else {
-                        f.innerText = thetext;
-                    }
-
-                    endspan.appendChild(f);
-                }
-            }
-
-            if (startspan && endspan) {
-                htmldiv.appendChild(startspan);
-                htmldiv.appendChild(document.createTextNode(' - '));
-                htmldiv.appendChild(endspan);
-            }
-            else if (startspan) {
-                htmldiv.appendChild(document.createTextNode('Starting '));
-                htmldiv.appendChild(startspan);
-            }
-            else if (endspan) {
-                htmldiv.appendChild(document.createTextNode('Until '));
-                htmldiv.appendChild(endspan);
-            }
-
+            htmldiv.innerText = `[${daterangestring}]`;
             this.mainpanel.appendChild(htmldiv);
         }
 
@@ -477,7 +433,7 @@ export class OpenHistoricaMapInspector {
         }
 
         // bottom links, single-word links, one line, with spacers
-        if (link_wikipedia) {
+        if (link_wikipedia || link_libcongress || link_wikidata || (startdate_source_link && startdate_source_text) || (enddate_source_link && enddate_source_text)) {
             const htmldiv = document.createElement('DIV');
             htmldiv.classList.add('openhistoricalmap-inspector-panel-paragraph');
 
@@ -505,6 +461,22 @@ export class OpenHistoricaMapInspector {
                 link.target = '_blank';
                 link.rel = 'nofollow';
                 link.href = link_libcongress;
+                links.push(link);
+            }
+            if (startdate_source_link && startdate_source_text) {
+                const link = document.createElement('A');
+                link.textContent = startdate_source_text;
+                link.target = '_blank';
+                link.rel = 'nofollow';
+                link.href = startdate_source_link;
+                links.push(link);
+            }
+            if (enddate_source_link && enddate_source_text) {
+                const link = document.createElement('A');
+                link.textContent = enddate_source_text;
+                link.target = '_blank';
+                link.rel = 'nofollow';
+                link.href = enddate_source_link;
                 links.push(link);
             }
 
